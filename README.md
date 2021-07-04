@@ -6,6 +6,20 @@
 [![Build Status - GitHub Actions][gha-badge]][gha-ci]
 [![Codecov][codecov-badge]][codecov]
 
+This npm module allows to communicate to a Lanaguage Server via Language Server Protocol (LSP). 
+The aim is to provide a standalone library with minimal dependencies in contrast to the official one provided by MS which heavily depends on VSCode node libraries.
+The interface is heavily inspired by a Python library counterpart called [pylspclient][pylspclient].
+
+For more information on the LSP specification itself please see [here][lsp]
+
+## Installation
+
+npm install ts-lsp-client
+
+## Run the tests
+
+npm run test
+
 ## License
 
 Licensed under the MIT License. See the [LICENSE](https://github.com/ImperiumMaximus/ts-lsp-client/blob/main/LICENSE) file for details.
@@ -28,3 +42,5 @@ Licensed under the MIT License. See the [LICENSE](https://github.com/ImperiumMax
 [gh-actions]: https://github.com/features/actions
 [codecov-badge]: https://codecov.io/gh/ImperiumMaximus/ts-lsp-client/branch/master/graph/badge.svg
 [codecov]: https://codecov.io/gh/ImperiumMaximus/ts-lsp-client
+[pylspclient]: https://github.com/yeger00/pylspclient
+[lsp]: https://microsoft.github.io/language-server-protocol/
