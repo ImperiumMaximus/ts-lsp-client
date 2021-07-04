@@ -2,6 +2,8 @@
   "name": "ts-lsp-client",
   "version": "0.0.3",
   "description": "Standalone Language Server Protocol Implementation with minimal dependencies",
+  "main": "build/src/main.js",
+  "types": "build/src/main.d.ts",
   "engines": {
     "node": ">= 14.16 <15"
   },
@@ -27,7 +29,7 @@
     "prebuild": "npm run lint",
     "build": "tsc -p tsconfig.release.json",
     "build:watch": "tsc -w -p tsconfig.release.json",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint src/ __tests__/ --ext .ts,.tsx",
     "test": "jest --coverage",
     "test:watch": "jest --watch"
   },
