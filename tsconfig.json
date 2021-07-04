@@ -20,7 +20,7 @@
     "declaration": true
   },
   "include": [
-    "./src/**/*.ts",
-    "./__tests__/**/*.ts"
+    "src/**/*",
+    "__tests__/**/*"
   ]
 }
