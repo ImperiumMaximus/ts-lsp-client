@@ -1,6 +1,6 @@
 {
   "name": "ts-lsp-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Standalone Language Server Protocol Implementation with minimal dependencies",
   "engines": {
     "node": ">= 14.16 <15"
@@ -33,6 +33,8 @@
   },
   "author": "Raffaele Fioratto <raffaele.fioratto@gmail.com>",
   "license": "MIT",
+  "repository": "ImperiumMaximus/ts-lsp-client",
+  "bugs": "https://github.com/ImperiumMaximus/ts-lsp-client/issues",
   "dependencies": {
     "json-rpc-2.0": "^0.2.16",
     "tslib": "~2.2.0"

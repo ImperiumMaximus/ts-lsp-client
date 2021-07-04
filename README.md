@@ -12,15 +12,19 @@ This npm module allows to communicate to a Lanaguage Server via Language Server 
 The aim is to provide a standalone library with minimal dependencies in contrast to the official one provided by MS which heavily depends on VSCode node libraries.
 The interface is heavily inspired by a Python library counterpart called [pylspclient][pylspclient].
 
-For more information on the LSP specification itself please see [here][lsp]
+For more information on the LSP specification itself please see [here][lsp].
 
 ## Installation
 
+```
 npm install ts-lsp-client
+```
 
 ## Run the tests
 
+```
 npm run test
+```
 
 ## License
 
@@ -42,7 +46,7 @@ Licensed under the MIT License. See the [LICENSE](https://github.com/ImperiumMax
 [volta-getting-started]: https://docs.volta.sh/guide/getting-started
 [volta-tomdale]: https://twitter.com/tomdale/status/1162017336699838467?s=20
 [gh-actions]: https://github.com/features/actions
-[codecov-badge]: https://codecov.io/gh/ImperiumMaximus/ts-lsp-client/branch/master/graph/badge.svg
+[codecov-badge]: https://codecov.io/gh/ImperiumMaximus/ts-lsp-client/branch/main/graph/badge.svg?token=fWTfaFk0Oz
 [codecov]: https://codecov.io/gh/ImperiumMaximus/ts-lsp-client
 [pylspclient]: https://github.com/yeger00/pylspclient
 [lsp]: https://microsoft.github.io/language-server-protocol/
