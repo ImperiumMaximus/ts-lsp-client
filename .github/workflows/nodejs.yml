@@ -3,7 +3,7 @@ name: Node.js CI
 on: [push]
 
 jobs:
-  build:
+  run:
 
     runs-on: ${{ matrix.os }}
     
@@ -11,6 +11,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     env:
+      CI: true
       OS: ${{ matrix.os }}
       NODE: '14.16'
 
@@ -37,5 +38,3 @@ jobs:
         fail_ci_if_error: true
         path_to_write_report: ./coverage/codecov_report.txt
         verbose: true
-      env:
-        CI: true
