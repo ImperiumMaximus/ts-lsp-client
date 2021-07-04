@@ -1,8 +1,6 @@
 module.exports = {
+  preset: 'ts-jest',
   testEnvironment: 'node',
-  transform: {
-    "^.+\\.tsx?$": "ts-jest"
-  },
   moduleFileExtensions: [
     "ts",
     "tsx",
@@ -17,4 +15,5 @@ module.exports = {
     'src/**/*.{ts,tsx,js,jsx}',
     '!src/**/*.d.ts',
   ],
+  collectCoverage: true
 };
