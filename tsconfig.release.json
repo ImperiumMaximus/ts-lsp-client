@@ -6,9 +6,6 @@
     "removeComments": true
   },
   "include": [
-    "./src/**/*.ts"
-  ],
-  "exclude": [
-    "./build/src/**/*.d.ts"
+    "src/**/*"
   ]
 }
