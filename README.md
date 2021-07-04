@@ -1,5 +1,7 @@
 # ts-lsp-client
 
+[![Version][npm-badge]][npm]
+[![Downloads/week][npm-dw-badge]][npm]
 [![TypeScript version][ts-badge]][typescript-4-3]
 [![Node.js version][nodejs-badge]][nodejs]
 [![MIT][license-badge]][license]
@@ -44,3 +46,6 @@ Licensed under the MIT License. See the [LICENSE](https://github.com/ImperiumMax
 [codecov]: https://codecov.io/gh/ImperiumMaximus/ts-lsp-client
 [pylspclient]: https://github.com/yeger00/pylspclient
 [lsp]: https://microsoft.github.io/language-server-protocol/
+[npm-badge]: https://img.shields.io/npm/v/ts-lsp-client.svg
+[npm]: https://npmjs.org/package/ts-lsp-client
+[npm-dw-badge]: https://img.shields.io/npm/dw/ts-lsp-client.svg
