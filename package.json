@@ -1,6 +1,6 @@
 {
   "name": "ts-lsp-client",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Standalone Language Server Protocol Implementation with minimal dependencies",
   "main": "build/src/main.js",
   "types": "build/src/main.d.ts",
@@ -13,6 +13,7 @@
   "devDependencies": {
     "@types/jest": "~26.0.23",
     "@types/node": "~14.14.45",
+    "@types/pino": "^6.3.8",
     "@typescript-eslint/eslint-plugin": "~4.25.0",
     "@typescript-eslint/parser": "~4.25.0",
     "eslint": "~7.27.0",
@@ -42,6 +43,8 @@
   "bugs": "https://github.com/ImperiumMaximus/ts-lsp-client/issues",
   "dependencies": {
     "json-rpc-2.0": "^0.2.16",
+    "pino": "^6.11.3",
+    "pino-pretty": "^5.1.0",
     "tslib": "~2.2.0"
   },
   "volta": {

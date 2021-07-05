@@ -8,8 +8,8 @@
 [![Build Status - GitHub Actions][gha-badge]][gha-ci]
 [![Codecov][codecov-badge]][codecov]
 
-This npm module allows to communicate to a Lanaguage Server via Language Server Protocol (LSP). 
-The aim is to provide a standalone library with minimal dependencies in contrast to the official one provided by MS which heavily depends on VSCode node libraries.
+This npm module allows to communicate to a Language Server via Language Server Protocol (LSP).
+The aim is to provide a standalone library with minimal dependencies in contrast to the official one implemented by MS which depends on VSCode node libraries.  
 The interface is heavily inspired by a Python library counterpart called [pylspclient][pylspclient].
 
 For more information on the LSP specification itself please see [here][lsp].

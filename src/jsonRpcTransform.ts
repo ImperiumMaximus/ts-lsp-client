@@ -33,29 +33,33 @@ export class JSONRPCTransform extends Transform {
         if (Buffer.isBuffer(chunk)) {
             chunk = chunk.toString(encoding);
         }
-
-        let oldState: ReceiveState;
+        
+        this._curChunk += chunk;
 
         if (this._state === 'content-length') {
-            const match = (this._curChunk || chunk).toString().match(JSON_RPC_RES_REGEX);
+            const match = this._curChunk.toString().match(JSON_RPC_RES_REGEX);
             if (!match || !Array.isArray(match) || match.length < 2) {
-                done(new Error(`[_transform] Bad header: ${chunk}`));
+                done(new Error(`[_transform] Bad header: ${this._curChunk || chunk}`));
                 return;
             }
             this._curContentLength = Number(match[1]);
-            this._curChunk = this._curChunk || chunk.substring(match[0].length);
+            this._curChunk = this._curChunk.substring(match[0].length);
             this._state = 'jsonrpc';
-            oldState = 'content-length';
         }
-
+        
         if (this._state === 'jsonrpc') {
-            if (!oldState) {
-                this._curChunk += chunk;
-            }
             if (this._curChunk.length >= this._curContentLength) {
                 this.push(this._reencode(this._curChunk.length > this._curContentLength ? this._curChunk.substring(0, this._curContentLength) : this._curChunk, encoding));
                 this._curChunk = this._curChunk.length > this._curContentLength ? this._curChunk.substring(this._curContentLength) : '';
                 this._state = 'content-length';
+                                
+                const match = this._curChunk.match(JSON_RPC_RES_REGEX);
+                if (match && Array.isArray(match) && match.length >= 2 && (this._curChunk.length - match[0].length) >= Number(match[1])) {
+                    const c = this._curChunk;
+                    this._curChunk = '';
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    this._transform(c, encoding, () => { });
+                }
             }
         }
         done();
