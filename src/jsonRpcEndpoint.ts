@@ -1,6 +1,7 @@
 import { JSONRPCClient, JSONRPCRequest, JSONRPCResponse } from 'json-rpc-2.0';
 import { EventEmitter, Readable, Writable } from 'stream';
 import { JSONRPCTransform } from './jsonRpcTransform';
+import { Logger, LoggerLevel } from './logger';
 
 export class JSONRPCEndpoint extends EventEmitter {
 
@@ -20,19 +21,20 @@ export class JSONRPCEndpoint extends EventEmitter {
 
         this.client = new JSONRPCClient(async (jsonRPCRequest) => {
             const jsonRPCRequestStr = JSON.stringify(jsonRPCRequest);
-            console.log(`sending: ${jsonRPCRequestStr}`)
+            Logger.log(`sending: ${jsonRPCRequestStr}`, LoggerLevel.DEBUG);
             this.writable.write(`Content-Length: ${jsonRPCRequestStr.length}\r\n\r\n${jsonRPCRequestStr}`);
         }, createId);
 
         this.readableByline.on('data', (jsonRPCResponseOrRequest: string) => {
             const jsonrpc = JSON.parse(jsonRPCResponseOrRequest);
-            console.log(`[transform] ${jsonRPCResponseOrRequest}`);
+            Logger.log(`[transform] ${jsonRPCResponseOrRequest}`, LoggerLevel.DEBUG);
 
             if (Object.prototype.hasOwnProperty.call(jsonrpc, 'id')) {
                 const jsonRPCResponse: JSONRPCResponse = jsonrpc as JSONRPCResponse;
                 if (jsonRPCResponse.id === (this.nextId - 1)) {
                     this.client.receive(jsonRPCResponse);
                 } else {
+                    Logger.log(`[transform] ${jsonRPCResponseOrRequest}`, LoggerLevel.ERROR);
                     this.emit('error', `[transform] Received id mismatch! Got ${jsonRPCResponse.id}, expected ${this.nextId - 1}`);
                 }
             } else {
