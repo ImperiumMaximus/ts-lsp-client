@@ -3,12 +3,14 @@ import { DefinitionParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams
     DocumentSymbolParams, InitializeParams, InitializeResult, LocationLink, ReferenceParams, ResponseError, 
     ShutdownResult, SignatureHelp, SignatureHelpParams, SymbolInformation, TypeDefinitionParams, Location } from "./models";
 import { once } from 'events';
+import { Logger, LoggerLevel } from "./logger";
 
 export class LspClient {
 
     private endpoint: JSONRPCEndpoint;
 
-    public constructor(endpoint: JSONRPCEndpoint) {
+    public constructor(endpoint: JSONRPCEndpoint, logLevel?: LoggerLevel, isJsonFormatEnabled?: boolean) {
+        Logger.setLogLevel(logLevel || LoggerLevel.DEBUG, isJsonFormatEnabled);
         this.endpoint = endpoint;
     }
 
