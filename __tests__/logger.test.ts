@@ -1,12 +1,13 @@
 import { Logger, LoggerLevel } from '../src/logger';
+import {afterEach, beforeEach, describe, expect, it, SpyInstance, vi} from "vitest";
 
 
 describe('ts-lsp-client logger', () => {
 
-    let stdoutWriteSpy: jest.SpyInstance;
+    let stdoutWriteSpy: SpyInstance;
 
     beforeEach(() => {
-        stdoutWriteSpy = jest.spyOn(process.stdout, 'write');
+        stdoutWriteSpy = vi.spyOn(process.stdout, 'write');
     });
 
     afterEach(() => {

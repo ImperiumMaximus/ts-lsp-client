@@ -2,6 +2,7 @@ import { once } from "events";
 import { JSONRPCRequest, JSONRPCResponse } from "json-rpc-2.0";
 import { Readable, Writable } from "stream";
 import { JSONRPCEndpoint } from "../src/jsonRpcEndpoint";
+import {describe, expect, it} from "vitest";
 
 class WriteMemory extends Writable {
     private _buffer: string;
@@ -55,7 +56,7 @@ describe('JSONRPCEndpoint', () => {
 
         const jsonRpcMessage: JSONRPCRequest = { "jsonrpc": "2.0", "method": "someMethod", "params": message, "id": 0};
 
-        expect(mockWriteStream.buffer()).toEqual(`Content-Length: ${JSON.stringify(jsonRpcMessage).length}\r\n\r\n${JSON.stringify(jsonRpcMessage)}`);
+        expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(jsonRpcMessage).length}\r\n\r\n${JSON.stringify(jsonRpcMessage)}`);
     });
 
     it('sends a JSONRPC notification', async () => {
@@ -68,7 +69,7 @@ describe('JSONRPCEndpoint', () => {
 
         const jsonRpcMessage: JSONRPCRequest = { "jsonrpc": "2.0", "method": "someMethod", "params": message };
 
-        expect(mockWriteStream.buffer()).toEqual(`Content-Length: ${JSON.stringify(jsonRpcMessage).length}\r\n\r\n${JSON.stringify(jsonRpcMessage)}`);
+        expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(jsonRpcMessage).length}\r\n\r\n${JSON.stringify(jsonRpcMessage)}`);
     });
 
     it('sends a JSONRPC request with the matched response', async () => {
