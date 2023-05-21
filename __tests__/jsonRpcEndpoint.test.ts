@@ -2,6 +2,7 @@ import { once } from "events";
 import { JSONRPCRequest, JSONRPCResponse } from "json-rpc-2.0";
 import { Readable, Writable } from "stream";
 import { JSONRPCEndpoint } from "../src/jsonRpcEndpoint";
+import {describe, expect, it} from "vitest";
 
 class WriteMemory extends Writable {
     private _buffer: string;

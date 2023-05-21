@@ -3,6 +3,7 @@ import { Readable, Writable } from "stream";
 import { JSONRPCEndpoint } from "../src/jsonRpcEndpoint";
 import { LspClient } from "../src/lspClient";
 import { ClientCapabilities, DidCloseTextDocumentParams, DidOpenTextDocumentParams, DocumentSymbol, SymbolKind, Location, SignatureHelp } from "../src/models";
+import {describe, expect, it} from "vitest";
 
 class WriteMemory extends Writable {
     private _buffer: string;
@@ -201,7 +202,7 @@ describe('LspClient', () => {
     it('sends a LSP Initialized notification', async () => {
         const mockWriteStream: WriteMemory = new WriteMemory();
         const mockReadStream: Readable = new Readable();
-        
+
         const e: JSONRPCEndpoint = new JSONRPCEndpoint(mockWriteStream, mockReadStream);
         const client = new LspClient(e);
 
