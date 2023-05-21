@@ -211,7 +211,7 @@ describe('LspClient', () => {
         mockReadStream.push(null);
 
         const initializedNotification: JSONRPCRequest = { "jsonrpc": "2.0", "method": "initialized" };
-        expect(mockWriteStream.buffer()).toEqual(`Content-Length: ${JSON.stringify(initializedNotification).length}\r\n\r\n${JSON.stringify(initializedNotification)}`);
+        expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(initializedNotification).length}\r\n\r\n${JSON.stringify(initializedNotification)}`);
     });
 
     it('sends a LSP Shutdown request', async () => {
@@ -244,7 +244,7 @@ describe('LspClient', () => {
         mockReadStream.push(null);
 
         const exitNotification: JSONRPCRequest = { "jsonrpc": "2.0", "method": "exit" };
-        expect(mockWriteStream.buffer()).toEqual(`Content-Length: ${JSON.stringify(exitNotification).length}\r\n\r\n${JSON.stringify(exitNotification)}`);
+        expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(exitNotification).length}\r\n\r\n${JSON.stringify(exitNotification)}`);
     });
 
     it('sends a LSP textDocument/didOpen notification', async () => {
@@ -267,7 +267,7 @@ describe('LspClient', () => {
         mockReadStream.push(null);
 
         const didOpenNotification: JSONRPCRequest = { "jsonrpc": "2.0", "method": "textDocument/didOpen", params: didOpenParams };
-        expect(mockWriteStream.buffer()).toEqual(`Content-Length: ${JSON.stringify(didOpenNotification).length}\r\n\r\n${JSON.stringify(didOpenNotification)}`);
+        expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(didOpenNotification).length}\r\n\r\n${JSON.stringify(didOpenNotification)}`);
     });
 
     it('sends a LSP textDocument/didClose notification', async () => {
@@ -288,7 +288,7 @@ describe('LspClient', () => {
         mockReadStream.push(null);
 
         const didOpenNotification: JSONRPCRequest = { "jsonrpc": "2.0", "method": "textDocument/didClose", params: didCloseParams };
-        expect(mockWriteStream.buffer()).toEqual(`Content-Length: ${JSON.stringify(didOpenNotification).length}\r\n\r\n${JSON.stringify(didOpenNotification)}`);
+        expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(didOpenNotification).length}\r\n\r\n${JSON.stringify(didOpenNotification)}`);
     });
 
     it('sends a LSP textDocument/documentSymbol request', async () => {

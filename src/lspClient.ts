@@ -1,6 +1,6 @@
 import { JSONRPCEndpoint } from "./jsonRpcEndpoint";
-import { DefinitionParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, DocumentSymbol, 
-    DocumentSymbolParams, InitializeParams, InitializeResult, LocationLink, ReferenceParams, ResponseError, 
+import { DefinitionParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, DocumentSymbol,
+    DocumentSymbolParams, InitializeParams, InitializeResult, LocationLink, ReferenceParams, ResponseError,
     ShutdownResult, SignatureHelp, SignatureHelpParams, SymbolInformation, TypeDefinitionParams, Location } from "./models";
 import { once } from 'events';
 export class LspClient {
@@ -55,7 +55,7 @@ export class LspClient {
         return this.endpoint.send('textDocument/signatureHelp', params);
     }
 
-    public once(method: string): Promise<any[]> {
+    public once(method: string): ReturnType<typeof once> {
         return once(this.endpoint, method);
     }
 }

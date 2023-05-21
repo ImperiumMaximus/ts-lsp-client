@@ -113,6 +113,7 @@ export interface InitializeParams extends WorkDoneProgressParams {
     /**
      * User provided initialization options.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initializationOptions?: any;
 
     /**
@@ -328,6 +329,7 @@ export interface ClientCapabilities {
     /**
      * Experimental client capabilities.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     experimental?: any;
 }
 
@@ -2096,6 +2098,7 @@ interface ServerCapabilities {
     /**
      * Experimental server capabilities.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     experimental?: any;
 }
 

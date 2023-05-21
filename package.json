@@ -20,7 +20,7 @@
     "@vitest/coverage-c8": "^0.31.1",
     "eslint": "~7.27.0",
     "eslint-config-prettier": "~8.3.0",
-    "eslint-plugin-jest": "~24.3.6",
+    "eslint-plugin-vitest": "^0.2.2",
     "nyc": "^15.1.0",
     "prettier": "~2.3.0",
     "rimraf": "~3.0.2",
