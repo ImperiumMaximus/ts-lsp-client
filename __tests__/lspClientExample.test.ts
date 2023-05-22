@@ -1,111 +1,201 @@
-import {expect, it} from "vitest";
+import {beforeAll, describe, expect, it} from "vitest";
 import * as lspClient from '../src/main';
-import {SignatureHelpTriggerKind} from '../src/main';
-import {spawn} from "child_process";
-import * as process from 'node:process';
-import * as path from 'node:path';
+import {JSONRPCEndpoint, LspClient, SignatureHelpTriggerKind} from '../src/main';
+import {ChildProcessWithoutNullStreams, spawn} from "child_process";
+import * as path from 'path';
 import {pathToFileURL} from "url";
 
-it('should use typescript-language-server', async () => {
 
-  const lspProcess = spawn(
+const rootPath = path.resolve(path.join(__dirname, 'mock'));
+let process: ChildProcessWithoutNullStreams;
+let endpoint: JSONRPCEndpoint;
+let client: LspClient;
+
+beforeAll(async () => {
+  // start the LSP server
+  process = spawn(
     path.join(__dirname, '../', 'node_modules', '.bin', 'typescript-language-server'),
     ['--stdio'],
     {
-      shell: true
+      shell: true,
+      stdio: 'pipe'
     }
   );
 
-  const endpoint = new lspClient.JSONRPCEndpoint(
-    lspProcess.stdin,
-    lspProcess.stdout
+  // create an RPC endpoint for the process
+  endpoint = new lspClient.JSONRPCEndpoint(
+    process.stdin,
+    process.stdout,
   );
 
-  const client = new lspClient.LspClient(endpoint);
+  // create the LSP client
+  client = new LspClient(endpoint);
 
-  {
-    // initialize the language server
-    const result = await client.initialize({
-      processId: process.pid,
-      capabilities: {},
-      clientInfo: {
-        name: 'lspClientExample',
-        version: '0.0.9'
-      },
-      workspaceFolders: [
-        {
-          name: 'workspace',
-          uri: pathToFileURL(path.resolve(path.join(__dirname, '../'))).href
-        }
-      ],
-      rootUri: null,
-      initializationOptions: {
-        tsserver: {
-          logVerbosity: 'verbose'
-        }
+  const result = await client.initialize({
+    processId: process.pid,
+    capabilities: {},
+    clientInfo: {
+      name: 'lspClientExample',
+      version: '0.0.9'
+    },
+    workspaceFolders: [
+      {
+        name: 'workspace',
+        uri: pathToFileURL(rootPath).href
       }
-    });
+    ],
+    rootUri: null,
+    initializationOptions: {
+      tsserver: {
+        logDirectory: '.log',
+        logVerbosity: 'verbose',
+        trace: 'verbose'
+      }
+    }
+  });
 
-    expect(result.capabilities.definitionProvider).toBeTruthy();
-  }
+  expect(result.capabilities).toBeDefined();
+});
 
-  const docUri = pathToFileURL(path.resolve(path.join(__dirname, '_example.ts'))).href;
+describe('language features', () => {
+  const docUri = pathToFileURL(path.join(rootPath, '_fake.ts')).href;
+  const impUri = pathToFileURL(path.join(rootPath, 'example.ts')).href.replace('/C:', '/c%3A');
+  const content =
+    `import func from './example';\r\n` +
+    `func(1,2);\r\n` +
+    `export default function meth(a: number, b: number): boolean {\r\n` +
+    `  return !!a && !!b;\r\n` +
+    `}\r\n` +
+    `meth(1,2);`;
 
-  {
-    // open a pseudo document
-    await client.didOpen({
-      textDocument: {
+  beforeAll(async () => {
+    {
+      // open a pseudo document
+      await client.didOpen({
+        textDocument: {
+          uri: docUri,
+          text: content,
+          version: 1,
+          languageId: 'typescript'
+        }
+      });
+
+      const result = await client.once('textDocument/publishDiagnostics');
+
+      expect(result).toEqual([{
         uri: docUri,
-        text: 'function test() {};\r\ntest()',
-        version: 1,
-        languageId: 'typescript'
-      }
-    });
-  }
+        diagnostics: []
+      }]);
+    }
+  });
 
-  {
+  it('Goto Definition Request', async () => {
     const result = await client.definition({
       position: {
-        line: 0,
-        character: 9
+        line: 1,
+        character: 0
       },
       textDocument: {
         uri: docUri
       },
     });
 
+    // finds part of the import statement
     expect(result).toEqual([{
-      uri: docUri,
+      uri: impUri,
       range: {
-        start: { line: 0, character: 9},
-        end: { line: 0, character: 13 }
+        start: { line: 6, character: 24},
+        end: { line: 6, character: 28 }
       }
     }])
-  }
+  });
 
-  {
-    const result = await client.signatureHelp({
-      position: {
-        line: 1,
-        character: 5
-      },
-      textDocument: {
-        uri: docUri
-      },
-      context: {
-        triggerKind: SignatureHelpTriggerKind.Invoked,
-        isRetrigger: false,
-        triggerCharacter: '('
-      }
-    });
+  it('Signature Help', async () => {
+    {
+      const result = await client.signatureHelp({
+        textDocument: {
+          uri: docUri
+        },
+        position: {
+          line: 1,
+          character: 5
+        },
+        context: {
+          triggerKind: SignatureHelpTriggerKind.ContentChange,
+          isRetrigger: false,
+          triggerCharacter: '('
+        }
+      });
 
-    expect(result).toEqual({
+      expect(result).not.toBeNull();
+      expect(result).toEqual({
         activeSignature: 0,
         activeParameter: 0,
-        signatures: [ { label: 'test(): void', parameters: [] } ]
-      }
-    )
-  }
+        signatures: [
+          {
+            label: 'func(a: number, b: number): boolean',
+            documentation: {
+              kind: 'markdown',
+              value:
+                'This is some example documentation\n' +
+                '\n' +
+                '*@return* — example return documentation'
+            },
+            parameters: [
+              {
+                documentation: {
+                  kind: 'markdown',
+                  value: 'example argument documentation'
+                },
+                label: 'a: number'
+              },
+              {
+                label: 'b: number'
+              }
+            ]
+          }
+        ]
+      });
+    }
+  })
 
-  expect(0).toBe(0);
-}, 20000);
+  it('Signature Help (inline)', async () => {
+    {
+      const result = await client.signatureHelp({
+        textDocument: {
+          uri: docUri
+        },
+        position: {
+          line: 5,
+          character: 5
+        },
+        context: {
+          triggerKind: SignatureHelpTriggerKind.ContentChange,
+          isRetrigger: false,
+          triggerCharacter: '('
+        }
+      });
+
+      expect(result).not.toBeNull();
+      expect(result).toEqual({
+          activeSignature: 0,
+          activeParameter: 0,
+          signatures: [
+            {
+              label: 'meth(a: number, b: number): boolean',
+              parameters: [
+                {
+                  label: 'a: number'
+                },
+                {
+                  label: 'b: number'
+                }
+              ]
+            }
+          ]
+        }
+      )
+    }
+  })
+});
+
