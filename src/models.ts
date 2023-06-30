@@ -113,6 +113,7 @@ export interface InitializeParams extends WorkDoneProgressParams {
     /**
      * User provided initialization options.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initializationOptions?: any;
 
     /**
@@ -328,6 +329,7 @@ export interface ClientCapabilities {
     /**
      * Experimental client capabilities.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     experimental?: any;
 }
 
@@ -1728,8 +1730,7 @@ interface SemanticTokensClientCapabilities {
          * The client will send the `textDocument/semanticTokens/range` request
          * if the server provides a corresponding handler.
          */
-        range?: boolean | {
-        };
+        range?: boolean | object;
 
         /**
          * The client will send the `textDocument/semanticTokens/full` request
@@ -2096,6 +2097,7 @@ interface ServerCapabilities {
     /**
      * Experimental server capabilities.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     experimental?: any;
 }
 
@@ -2415,8 +2417,7 @@ export interface SemanticTokensOptions extends WorkDoneProgressOptions {
      * Server supports providing semantic tokens for a specific range
      * of a document.
      */
-    range?: boolean | {
-    };
+    range?: boolean | object;
 
     /**
      * Server supports providing semantic tokens for a full document.
@@ -2996,3 +2997,85 @@ export interface ParameterInformation {
      */
     documentation?: string | MarkupContent;
 }
+
+export interface HoverParams extends TextDocumentPositionParams,
+  WorkDoneProgressParams {
+}
+
+/**
+ * MarkedString can be used to render human readable text. It is either a
+ * markdown string or a code-block that provides a language and a code snippet.
+ * The language identifier is semantically equal to the optional language
+ * identifier in fenced code blocks in GitHub issues.
+ *
+ * The pair of a language and a value is an equivalent to markdown:
+ * ```${language}
+ * ${value}
+ * ```
+ *
+ * Note that markdown strings will be sanitized - that means html will be
+ * escaped.
+ *
+ * @deprecated use MarkupContent instead.
+ */
+type MarkedString = string | { language: string; value: string };
+
+/**
+ * A `MarkupContent` literal represents a string value which content is
+ * interpreted base on its kind flag. Currently the protocol supports
+ * `plaintext` and `markdown` as markup kinds.
+ *
+ * If the kind is `markdown` then the value can contain fenced code blocks like
+ * in GitHub issues.
+ *
+ * Here is an example how such a string can be constructed using
+ * JavaScript / TypeScript:
+ * ```typescript
+ * let markdown: MarkdownContent = {
+ * 	kind: MarkupKind.Markdown,
+ * 	value: [
+ * 		'# Header',
+ * 		'Some text',
+ * 		'```typescript',
+ * 		'someCode();',
+ * 		'```'
+ * 	].join('\n')
+ * };
+ * ```
+ *
+ * *Please Note* that clients might sanitize the return markdown. A client could
+ * decide to remove HTML from the markdown to avoid script execution.
+ */
+export interface MarkupContent {
+  /**
+   * The type of the Markup
+   */
+  kind: MarkupKind;
+
+  /**
+   * The content itself
+   */
+  value: string;
+}
+
+/**
+ * The result of a hover request.
+ */
+export interface Hover {
+  /**
+   * The hover's content
+   */
+  contents: MarkedString | MarkedString[] | MarkupContent;
+
+  /**
+   * An optional range is a range inside a text document
+   * that is used to visualize a hover, e.g. by changing the background color.
+   */
+  range?: Range;
+}
+
+export interface DeclarationParams extends TextDocumentPositionParams,
+  WorkDoneProgressParams, PartialResultParams {
+}
+
+
