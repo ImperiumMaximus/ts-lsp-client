@@ -1730,8 +1730,7 @@ interface SemanticTokensClientCapabilities {
          * The client will send the `textDocument/semanticTokens/range` request
          * if the server provides a corresponding handler.
          */
-        range?: boolean | {
-        };
+        range?: boolean | object;
 
         /**
          * The client will send the `textDocument/semanticTokens/full` request
@@ -2418,8 +2417,7 @@ export interface SemanticTokensOptions extends WorkDoneProgressOptions {
      * Server supports providing semantic tokens for a specific range
      * of a document.
      */
-    range?: boolean | {
-    };
+    range?: boolean | object;
 
     /**
      * Server supports providing semantic tokens for a full document.
