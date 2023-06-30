@@ -8,12 +8,12 @@
     "build/src"
   ],
   "engines": {
-    "node": ">= 14.16",
+    "node": ">= 16",
     "pnpm": ">= 6.0.0"
   },
   "packageManager": "pnpm@6.0.0",
   "devDependencies": {
-    "@types/node": "~14.14.45",
+    "@types/node": "~16",
     "@types/pino": "^6.3.8",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
