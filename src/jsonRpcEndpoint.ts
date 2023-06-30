@@ -1,7 +1,8 @@
 import { JSONRPCClient, JSONRPCRequest, JSONRPCResponse } from 'json-rpc-2.0';
-import { EventEmitter, Readable, Writable } from 'stream';
+import {EventEmitter, Readable, TransformOptions, Writable} from 'stream';
 import { JSONRPCTransform } from './jsonRpcTransform';
 import { Logger, LoggerLevel } from './logger';
+import {JSONRPCParams} from "json-rpc-2.0/dist/models";
 
 export class JSONRPCEndpoint extends EventEmitter {
 
@@ -11,7 +12,7 @@ export class JSONRPCEndpoint extends EventEmitter {
     private client: JSONRPCClient;
     private nextId: number;
 
-    public constructor(writable: Writable, readable: Readable, options?) {
+    public constructor(writable: Writable, readable: Readable, options?: ConstructorParameters<typeof EventEmitter>[0] & TransformOptions) {
         super(options);
         this.nextId = 0;
         const createId = () => this.nextId++;
@@ -44,11 +45,11 @@ export class JSONRPCEndpoint extends EventEmitter {
         });
     }
 
-    public send(method: string, message?: any): PromiseLike<any> {
+    public send(method: string, message?: JSONRPCParams): ReturnType<JSONRPCClient["request"]> {
         return this.client.request(method, message);
     }
 
-    public notify(method: string, message?: any): void {
+    public notify(method: string, message?: JSONRPCParams): void {
         this.client.notify(method, message);
     }
 }

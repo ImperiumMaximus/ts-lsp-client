@@ -1,4 +1,4 @@
-import * as pino from 'pino';
+import pino from 'pino';
 
 export enum LoggerLevel {
     TRACE = "10",

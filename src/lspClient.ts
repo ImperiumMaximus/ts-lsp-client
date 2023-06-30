@@ -1,7 +1,24 @@
 import { JSONRPCEndpoint } from "./jsonRpcEndpoint";
-import { DefinitionParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, DocumentSymbol, 
-    DocumentSymbolParams, InitializeParams, InitializeResult, LocationLink, ReferenceParams, ResponseError, 
-    ShutdownResult, SignatureHelp, SignatureHelpParams, SymbolInformation, TypeDefinitionParams, Location } from "./models";
+import {
+  DefinitionParams,
+  DidCloseTextDocumentParams,
+  DidOpenTextDocumentParams,
+  DocumentSymbol,
+  DocumentSymbolParams,
+  InitializeParams,
+  InitializeResult,
+  LocationLink,
+  ReferenceParams,
+  ResponseError,
+  ShutdownResult,
+  SignatureHelp,
+  SignatureHelpParams,
+  SymbolInformation,
+  TypeDefinitionParams,
+  Location,
+  HoverParams,
+  Hover, DeclarationParams
+} from "./models";
 import { once } from 'events';
 export class LspClient {
 
@@ -55,7 +72,15 @@ export class LspClient {
         return this.endpoint.send('textDocument/signatureHelp', params);
     }
 
-    public once(method: string): Promise<any[]> {
+    public once(method: string): ReturnType<typeof once> {
         return once(this.endpoint, method);
+    }
+
+    public hover(params: HoverParams): PromiseLike<Hover> {
+      return this.endpoint.send('textDocument/hover', params);
+    }
+
+    public gotoDeclaration(params: DeclarationParams): PromiseLike<Location | Location[] | LocationLink[] |null> {
+      return this.endpoint.send('textDocument/declaration', params);
     }
 }

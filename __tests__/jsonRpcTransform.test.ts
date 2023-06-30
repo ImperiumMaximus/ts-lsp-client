@@ -2,6 +2,7 @@ import { JSONRPCTransform } from "../src/jsonRpcTransform";
 import { Readable } from "stream";
 import { JSONRPCRequest, JSONRPCResponse } from "json-rpc-2.0";
 import { once } from 'events';
+import {describe, expect, it} from "vitest";
 
 const mockReadStreamOK = (jsonRPC: JSONRPCResponse | JSONRPCRequest | JSONRPCResponse[] | JSONRPCRequest[] | (JSONRPCRequest | JSONRPCResponse)[] | string | string[]) => {
     const readable = new Readable();
@@ -34,7 +35,7 @@ describe('JSONRPCTransform', () => {
         const response: JSONRPCResponse = { "jsonrpc": "2.0", "id": 0, "result": {
             "capabilities": { "textDocumentSync": 1, "hoverProvider": true, "completionProvider": { "resolveProvider": false, "triggerCharacters": ["."] }, "definitionProvider": true, "referencesProvider": true, "documentSymbolProvider": true, "codeActionProvider": { "codeActionKinds": ["quickfix", "refactor.extract"] }, "codeLensProvider": { "resolveProvider": false }, "renameProvider": true }
         }};
-        
+
         const jsonRpcTransform = JSONRPCTransform.createStream(mockReadStreamOK(response));
         const jsonrpc = (await once(jsonRpcTransform, 'data'))[0];
         expect(jsonrpc).toEqual(JSON.stringify(response));
@@ -42,7 +43,7 @@ describe('JSONRPCTransform', () => {
 
     it('unpacks a raw JSON RPC request into an JSONRPCRequest instance', async () => {
         const request: JSONRPCRequest = { "jsonrpc": "2.0", "method": "telemetry/event", "params": { "properties": { "Feature": "ApexPrelude-startup", "Exception": "None" }, "measures": { "ExecutionTime": 2673 } } };
-    
+
         const jsonRpcTransform = JSONRPCTransform.createStream(mockReadStreamOK(request));
         const jsonrpc = (await once(jsonRpcTransform, 'data'))[0];
         expect(jsonrpc).toEqual(JSON.stringify(request));
