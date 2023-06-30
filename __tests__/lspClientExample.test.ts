@@ -59,7 +59,7 @@ beforeAll(async () => {
 
 describe('language features', () => {
   const docUri = pathToFileURL(path.join(rootPath, '_fake.ts')).href;
-  const impUri = pathToFileURL(path.join(rootPath, 'example.ts')).href.replace('/C:', '/c%3A');
+  const impUri = pathToFileURL(path.join(rootPath, 'example.ts')).href.replace(/\/([A-Z]):/, (v) => v.substring(0, v.length - 1).toLocaleLowerCase()+'%3A');
   const content =
     `import func from './example';\r\n` +
     `func(1,2);\r\n` +
