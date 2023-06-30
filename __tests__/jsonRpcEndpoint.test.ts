@@ -54,7 +54,7 @@ describe('JSONRPCEndpoint', () => {
 
         e.send('someMethod', message);
 
-        const jsonRpcMessage: JSONRPCRequest = { "jsonrpc": "2.0", "method": "someMethod", "params": message, "id": 0};
+        const jsonRpcMessage: JSONRPCRequest = { "jsonrpc": "2.0", "id": 0, "method": "someMethod", "params": message};
 
         expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(jsonRpcMessage).length}\r\n\r\n${JSON.stringify(jsonRpcMessage)}`);
     });
