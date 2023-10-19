@@ -15,7 +15,7 @@ specifiers:
   pino-pretty: ^5.1.3
   prettier: ~2.3.0
   rimraf: ~3.0.2
-  tslib: ~2.6.1
+  tslib: ~2.6.2
   tsutils: ~3.21.0
   typescript: ~4.3.2
   typescript-language-server: ^3.3.2
