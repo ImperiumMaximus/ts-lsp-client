@@ -72,6 +72,22 @@ describe('JSONRPCEndpoint', () => {
         expect(mockWriteStream.buffer()).toBe(`Content-Length: ${JSON.stringify(jsonRpcMessage).length}\r\n\r\n${JSON.stringify(jsonRpcMessage)}`);
     });
 
+    it('sends a JSONRPC notification with emojis payload', async () => {
+        const mockWriteStream: WriteMemory = new WriteMemory();
+        const e: JSONRPCEndpoint = new JSONRPCEndpoint(mockWriteStream, mockReadStreamOK([], true));
+
+        const message = { param1: 'value1😀', param2: { subParam1: 'subValue1🎉' } };
+
+        e.notify('someMethod', message);
+
+        const jsonRpcMessage: JSONRPCRequest = { "jsonrpc": "2.0", "method": "someMethod", "params": message };
+
+        // Calculate byte size instead of character size to account for emojis
+        const byteSize = Buffer.byteLength(JSON.stringify(jsonRpcMessage), 'utf8');
+
+        expect(mockWriteStream.buffer()).toBe(`Content-Length: ${byteSize}\r\n\r\n${JSON.stringify(jsonRpcMessage)}`);
+    });
+
     it('sends a JSONRPC request with the matched response', async () => {
         const mockWriteStream: WriteMemory = new WriteMemory();
         const mockReadStream: Readable = mockReadStreamOK([], false);
