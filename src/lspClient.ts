@@ -21,7 +21,11 @@ import {
   DeclarationParams,
   CompletionParams,
   CompletionItem,
-  CompletionList
+  CompletionList,
+  InlayHintParams,
+  InlayHint,
+  TypeHierarchyPrepareParams,
+  TypeHierarchyItem
 } from "./models";
 import { once } from 'events';
 export class LspClient {
@@ -90,5 +94,13 @@ export class LspClient {
 
   public completion(params: CompletionParams): PromiseLike<CompletionItem[] | CompletionList | null> {
     return this.endpoint.send('textDocument/completion', params);
+  }
+
+  public inlayHint(params: InlayHintParams): PromiseLike<InlayHint[] | null> {
+    return this.endpoint.send('textDocument/inlayHint', params);
+  }
+
+  public prepareTypeHierarchy(params: TypeHierarchyPrepareParams): PromiseLike<TypeHierarchyItem[] | null> {
+    return this.endpoint.send('textDocument/prepareTypeHierarchy', params);
   }
 }

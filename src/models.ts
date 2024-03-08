@@ -3490,3 +3490,209 @@ export interface CompletionList {
    */
   items: CompletionItem[];
 }
+
+/**
+ * A parameter literal used in inlay hint requests.
+ *
+ * @since 3.17.0
+ */
+export interface InlayHintParams extends WorkDoneProgressParams {
+  /**
+   * The text document.
+   */
+  textDocument: TextDocumentIdentifier;
+
+  /**
+   * The visible document range for which inlay hints should be computed.
+   */
+  range: Range;
+}
+
+/**
+ * Inlay hint kinds.
+ *
+ * @since 3.17.0
+ */
+export enum InlayHintKind {
+
+  /**
+   * An inlay hint that for a type annotation.
+   */
+  Type = 1,
+
+  /**
+   * An inlay hint that is for a parameter.
+   */
+  Parameter = 2
+}
+
+/**
+ * An inlay hint label part allows for interactive and composite labels
+ * of inlay hints.
+ *
+ * @since 3.17.0
+ */
+export interface InlayHintLabelPart {
+
+  /**
+   * The value of this label part.
+   */
+  value: string;
+
+  /**
+   * The tooltip text when you hover over this label part. Depending on
+   * the client capability `inlayHint.resolveSupport` clients might resolve
+   * this property late using the resolve request.
+   */
+  tooltip?: string | MarkupContent;
+
+  /**
+   * An optional source code location that represents this
+   * label part.
+   *
+   * The editor will use this location for the hover and for code navigation
+   * features: This part will become a clickable link that resolves to the
+   * definition of the symbol at the given location (not necessarily the
+   * location itself), it shows the hover that shows at the given location,
+   * and it shows a context menu with further code navigation commands.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  location?: Location;
+
+  /**
+   * An optional command for this label part.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  command?: Command;
+}
+
+/**
+ * Inlay hint information.
+ *
+ * @since 3.17.0
+ */
+export interface InlayHint {
+
+  /**
+   * The position of this hint.
+   *
+   * If multiple hints have the same position, they will be shown in the order
+   * they appear in the response.
+   */
+  position: Position;
+
+  /**
+   * The label of this hint. A human readable string or an array of
+   * InlayHintLabelPart label parts.
+   *
+   * *Note* that neither the string nor the label part can be empty.
+   */
+  label: string | InlayHintLabelPart[];
+
+  /**
+   * The kind of this hint. Can be omitted in which case the client
+   * should fall back to a reasonable default.
+   */
+  kind?: InlayHintKind;
+
+  /**
+   * Optional text edits that are performed when accepting this inlay hint.
+   *
+   * *Note* that edits are expected to change the document so that the inlay
+   * hint (or its nearest variant) is now part of the document and the inlay
+   * hint itself is now obsolete.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  textEdits?: TextEdit[];
+
+  /**
+   * The tooltip text when you hover over this item.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  tooltip?: string | MarkupContent;
+
+  /**
+   * Render padding before the hint.
+   *
+   * Note: Padding should use the editor's background color, not the
+   * background color of the hint itself. That means padding can be used
+   * to visually align/separate an inlay hint.
+   */
+  paddingLeft?: boolean;
+
+  /**
+   * Render padding after the hint.
+   *
+   * Note: Padding should use the editor's background color, not the
+   * background color of the hint itself. That means padding can be used
+   * to visually align/separate an inlay hint.
+   */
+  paddingRight?: boolean;
+
+
+  /**
+   * A data entry field that is preserved on an inlay hint between
+   * a `textDocument/inlayHint` and a `inlayHint/resolve` request.
+   */
+  data?: LSPAny;
+}
+
+export interface TypeHierarchyPrepareParams extends TextDocumentPositionParams,
+  WorkDoneProgressParams {
+}
+
+export interface TypeHierarchyItem {
+  /**
+   * The name of this item.
+   */
+  name: string;
+
+  /**
+   * The kind of this item.
+   */
+  kind: SymbolKind;
+
+  /**
+   * Tags for this item.
+   */
+  tags?: SymbolTag[];
+
+  /**
+   * More detail for this item, e.g. the signature of a function.
+   */
+  detail?: string;
+
+  /**
+   * The resource identifier of this item.
+   */
+  uri: DocumentUri;
+
+  /**
+   * The range enclosing this symbol not including leading/trailing whitespace
+   * but everything else, e.g. comments and code.
+   */
+  range: Range;
+
+  /**
+   * The range that should be selected and revealed when this symbol is being
+   * picked, e.g. the name of a function. Must be contained by the
+   * [`range`](#TypeHierarchyItem.range).
+   */
+  selectionRange: Range;
+
+  /**
+   * A data entry field that is preserved between a type hierarchy prepare and
+   * supertypes or subtypes requests. It could also be used to identify the
+   * type hierarchy in the server, helping improve the performance on
+   * resolving supertypes and subtypes.
+   */
+  data?: LSPAny;
+}
