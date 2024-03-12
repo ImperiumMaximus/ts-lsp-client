@@ -23,7 +23,8 @@ export class JSONRPCEndpoint extends EventEmitter {
         this.client = new JSONRPCClient(async (jsonRPCRequest) => {
             const jsonRPCRequestStr = JSON.stringify(jsonRPCRequest);
             Logger.log(`sending: ${jsonRPCRequestStr}`, LoggerLevel.DEBUG);
-            this.writable.write(`Content-Length: ${jsonRPCRequestStr.length}\r\n\r\n${jsonRPCRequestStr}`);
+            const contentLength = Buffer.from(jsonRPCRequestStr, 'utf-8').byteLength;
+            this.writable.write(`Content-Length: ${contentLength}\r\n\r\n${jsonRPCRequestStr}`);
         }, createId);
 
         this.readableByline.on('data', (jsonRPCResponseOrRequest: string) => {
