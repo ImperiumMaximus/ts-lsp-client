@@ -60,6 +60,10 @@ export class LspClient {
     this.endpoint.notify('textDocument/didClose', params);
   }
 
+  public didChange(params: DidCloseTextDocumentParams): void {
+    this.endpoint.notify('textDocument/didChange', params);
+  }
+
   public documentSymbol(params: DocumentSymbolParams): PromiseLike<DocumentSymbol[] | SymbolInformation[] | null> {
     return this.endpoint.send('textDocument/documentSymbol', params);
   }
