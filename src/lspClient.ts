@@ -1,6 +1,7 @@
 import { JSONRPCEndpoint } from "./jsonRpcEndpoint";
 import {
   DefinitionParams,
+  DidChangeTextDocumentParams,
   DidCloseTextDocumentParams,
   DidOpenTextDocumentParams,
   DocumentSymbol,
@@ -60,7 +61,7 @@ export class LspClient {
     this.endpoint.notify('textDocument/didClose', params);
   }
 
-  public didChange(params: DidCloseTextDocumentParams): void {
+  public didChange(params: DidChangeTextDocumentParams): void {
     this.endpoint.notify('textDocument/didChange', params);
   }
 

@@ -362,6 +362,28 @@ export interface ClientCapabilities {
      * @since 3.16.0
      */
     markdown?: MarkdownClientCapabilities;
+
+    /**
+     * The position encodings supported by the client. Client and server
+     * have to agree on the same position encoding to ensure that offsets
+     * (e.g. character position in a line) are interpreted the same on both
+     * side.
+     *
+     * To keep the protocol backwards compatible the following applies: if
+     * the value 'utf-16' is missing from the array of position encodings
+     * servers can assume that the client supports UTF-16. UTF-16 is
+     * therefore a mandatory encoding.
+     *
+     * If omitted it defaults to ['utf-16'].
+     *
+     * Implementation considerations: since the conversion from one encoding
+     * into another requires the content of the file / line the conversion
+     * is best done where the file is read which is usually on the server
+     * side.
+     *
+     * @since 3.17.0
+     */
+    positionEncodings?: PositionEncodingKind[];
   };
 
   /**
@@ -497,6 +519,34 @@ export interface TextDocumentEdit {
   edits: (TextEdit | AnnotatedTextEdit)[];
 }
 
+/**
+ * An event describing a change to a text document. If only a text is provided
+ * it is considered to be the full content of the document.
+ */
+export type TextDocumentContentChangeEvent = {
+  /**
+   * The range of the document that changed.
+   */
+  range: Range;
+
+  /**
+   * The optional length of the range that got replaced.
+   *
+   * @deprecated use range instead.
+   */
+  rangeLength?: uinteger;
+
+  /**
+   * The new text for the provided range.
+   */
+  text: string;
+} | {
+  /**
+   * The new text of the whole document.
+   */
+  text: string;
+};
+
 interface TextDocumentIdentifier {
   /**
    * The text document's URI.
@@ -504,6 +554,15 @@ interface TextDocumentIdentifier {
   uri: DocumentUri;
 }
 
+interface VersionedTextDocumentIdentifier extends TextDocumentIdentifier {
+  /**
+   * The version number of this document.
+   *
+   * The version number of a document will increase after each change,
+   * including undo/redo. The number doesn't need to be consecutive.
+   */
+  version: integer;
+}
 
 interface OptionalVersionedTextDocumentIdentifier extends TextDocumentIdentifier {
   /**
@@ -1883,6 +1942,44 @@ export interface MarkdownClientCapabilities {
   version?: string;
 }
 
+/**
+ * A type indicating how positions are encoded,
+ * specifically what column offsets mean.
+ *
+ * @since 3.17.0
+ */
+export type PositionEncodingKind = string;
+
+// /**
+//  * A set of predefined position encoding kinds.
+//  *
+//  * @since 3.17.0
+//  */
+// export enum PositionEncodingKind {
+//
+//   /**
+//    * Character offsets count UTF-8 code units (e.g bytes).
+//    */
+//   UTF8 = 'utf-8',
+//
+//   /**
+//    * Character offsets count UTF-16 code units.
+//    *
+//    * This is the default and must always be supported
+//    * by servers
+//    */
+//   UTF16 = 'utf-16',
+//
+//   /**
+//    * Character offsets count UTF-32 code units.
+//    *
+//    * Implementation note: these are the same as Unicode code points,
+//    * so this `PositionEncodingKind` may also be used for an
+//    * encoding-agnostic representation of character offsets.
+//    */
+//   UTF32 = 'utf-32',
+// }
+
 export interface InitializeResult {
   /**
    * The capabilities the language server provides.
@@ -2782,6 +2879,32 @@ export interface ReferenceContext {
    * Include the declaration of the current symbol.
    */
   includeDeclaration: boolean;
+}
+
+export interface DidChangeTextDocumentParams {
+  /**
+   * The document that did change. The version number points
+   * to the version after all provided content changes have
+   * been applied.
+   */
+  textDocument: VersionedTextDocumentIdentifier;
+
+  /**
+   * The actual content changes. The content changes describe single state
+   * changes to the document. So if there are two content changes c1 (at
+   * array index 0) and c2 (at array index 1) for a document in state S then
+   * c1 moves the document from S to S' and c2 from S' to S''. So c1 is
+   * computed on the state S and c2 is computed on the state S'.
+   *
+   * To mirror the content of a document using change events use the following
+   * approach:
+   * - start with the same initial content
+   * - apply the 'textDocument/didChange' notifications in the order you
+   *   receive them.
+   * - apply the `TextDocumentContentChangeEvent`s in a single notification
+   *   in the order you receive them.
+   */
+  contentChanges: TextDocumentContentChangeEvent[];
 }
 
 export interface DidCloseTextDocumentParams {
