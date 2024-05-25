@@ -23,6 +23,44 @@ type DocumentUri = string;
 export type TraceValue = 'off' | 'messages' | 'verbose';
 
 /**
+ * LSP object definition.
+ *
+ * @since 3.17.0
+ */
+export type LSPObject = { [key: string]: LSPAny };
+
+/**
+ * LSP arrays.
+ *
+ * @since 3.17.0
+ */
+export type LSPArray = LSPAny[];
+
+/**
+ * The LSP any type
+ *
+ * @since 3.17.0
+ */
+export type LSPAny = LSPObject | LSPArray | string | integer | uinteger |
+  decimal | boolean | null;
+
+interface Command {
+  /**
+   * Title of the command, like `save`.
+   */
+  title: string;
+  /**
+   * The identifier of the actual command handler.
+   */
+  command: string;
+  /**
+   * Arguments that the command handler should be
+   * invoked with.
+   */
+  arguments?: LSPAny[];
+}
+
+/**
  * An identifier referring to a change annotation managed by a workspace
  * edit.
  *
@@ -31,455 +69,514 @@ export type TraceValue = 'off' | 'messages' | 'verbose';
 export type ChangeAnnotationIdentifier = string;
 
 export interface ResponseError {
-    /**
-     * A number indicating the error type that occurred.
-     */
-    code: integer;
+  /**
+   * A number indicating the error type that occurred.
+   */
+  code: integer;
 
-    /**
-     * A string providing a short description of the error.
-     */
-    message: string;
+  /**
+   * A string providing a short description of the error.
+   */
+  message: string;
 
-    /**
-     * A primitive or structured value that contains additional
-     * information about the error. Can be omitted.
-     */
-    data?: string | number | boolean | [] | Record<string, unknown> | null;
+  /**
+   * A primitive or structured value that contains additional
+   * information about the error. Can be omitted.
+   */
+  data?: string | number | boolean | [] | Record<string, unknown> | null;
 }
 
 export interface WorkDoneProgressParams {
-    /**
-     * An optional token that a server can use to report work done progress.
-     */
-    workDoneToken?: ProgressToken;
+  /**
+   * An optional token that a server can use to report work done progress.
+   */
+  workDoneToken?: ProgressToken;
 }
 
 export interface InitializeParams extends WorkDoneProgressParams {
+  /**
+   * The process Id of the parent process that started the server. Is null if
+   * the process has not been started by another process. If the parent
+   * process is not alive then the server should exit (see exit notification)
+   * its process.
+   */
+  processId: integer | null;
+
+  /**
+   * Information about the client
+   *
+   * @since 3.15.0
+   */
+  clientInfo?: {
     /**
-     * The process Id of the parent process that started the server. Is null if
-     * the process has not been started by another process. If the parent
-     * process is not alive then the server should exit (see exit notification)
-     * its process.
+     * The name of the client as defined by the client.
      */
-    processId: integer | null;
+    name: string;
 
     /**
-     * Information about the client
-     *
-     * @since 3.15.0
+     * The client's version as defined by the client.
      */
-    clientInfo?: {
-        /**
-         * The name of the client as defined by the client.
-         */
-        name: string;
+    version?: string;
+  };
 
-        /**
-         * The client's version as defined by the client.
-         */
-        version?: string;
-    };
+  /**
+   * The locale the client is currently showing the user interface
+   * in. This must not necessarily be the locale of the operating
+   * system.
+   *
+   * Uses IETF language tags as the value's syntax
+   * (See https://en.wikipedia.org/wiki/IETF_language_tag)
+   *
+   * @since 3.16.0
+   */
+  locale?: string;
 
-    /**
-     * The locale the client is currently showing the user interface
-     * in. This must not necessarily be the locale of the operating
-     * system.
-     *
-     * Uses IETF language tags as the value's syntax
-     * (See https://en.wikipedia.org/wiki/IETF_language_tag)
-     *
-     * @since 3.16.0
-     */
-    locale?: string;
+  /**
+   * The rootPath of the workspace. Is null
+   * if no folder is open.
+   *
+   * @deprecated in favour of `rootUri`.
+   */
+  rootPath?: string | null;
 
-    /**
-     * The rootPath of the workspace. Is null
-     * if no folder is open.
-     *
-     * @deprecated in favour of `rootUri`.
-     */
-    rootPath?: string | null;
+  /**
+   * The rootUri of the workspace. Is null if no
+   * folder is open. If both `rootPath` and `rootUri` are set
+   * `rootUri` wins.
+   *
+   * @deprecated in favour of `workspaceFolders`
+   */
+  rootUri: DocumentUri | null;
 
-    /**
-     * The rootUri of the workspace. Is null if no
-     * folder is open. If both `rootPath` and `rootUri` are set
-     * `rootUri` wins.
-     *
-     * @deprecated in favour of `workspaceFolders`
-     */
-    rootUri: DocumentUri | null;
+  /**
+   * User provided initialization options.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initializationOptions?: any;
 
-    /**
-     * User provided initialization options.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    initializationOptions?: any;
+  /**
+   * The capabilities provided by the client (editor or tool)
+   */
+  capabilities: ClientCapabilities;
 
-    /**
-     * The capabilities provided by the client (editor or tool)
-     */
-    capabilities: ClientCapabilities;
+  /**
+   * The initial trace setting. If omitted trace is disabled ('off').
+   */
+  trace?: TraceValue;
 
-    /**
-     * The initial trace setting. If omitted trace is disabled ('off').
-     */
-    trace?: TraceValue;
-
-    /**
-     * The workspace folders configured in the client when the server starts.
-     * This property is only available if the client supports workspace folders.
-     * It can be `null` if the client supports workspace folders but none are
-     * configured.
-     *
-     * @since 3.6.0
-     */
-    workspaceFolders?: WorkspaceFolder[] | null;
+  /**
+   * The workspace folders configured in the client when the server starts.
+   * This property is only available if the client supports workspace folders.
+   * It can be `null` if the client supports workspace folders but none are
+   * configured.
+   *
+   * @since 3.6.0
+   */
+  workspaceFolders?: WorkspaceFolder[] | null;
 }
 
 export interface ClientCapabilities {
+  /**
+   * Workspace specific client capabilities.
+   */
+  workspace?: {
     /**
-     * Workspace specific client capabilities.
+     * The client supports applying batch edits
+     * to the workspace by supporting the request
+     * 'workspace/applyEdit'
      */
-    workspace?: {
-        /**
-         * The client supports applying batch edits
-         * to the workspace by supporting the request
-         * 'workspace/applyEdit'
-         */
-        applyEdit?: boolean;
-
-        /**
-         * Capabilities specific to `WorkspaceEdit`s
-         */
-        workspaceEdit?: WorkspaceEditClientCapabilities;
-
-        /**
-         * Capabilities specific to the `workspace/didChangeConfiguration`
-         * notification.
-         */
-        didChangeConfiguration?: DidChangeConfigurationClientCapabilities;
-
-        /**
-         * Capabilities specific to the `workspace/didChangeWatchedFiles`
-         * notification.
-         */
-        didChangeWatchedFiles?: DidChangeWatchedFilesClientCapabilities;
-
-        /**
-         * Capabilities specific to the `workspace/symbol` request.
-         */
-        symbol?: WorkspaceSymbolClientCapabilities;
-
-        /**
-         * Capabilities specific to the `workspace/executeCommand` request.
-         */
-        executeCommand?: ExecuteCommandClientCapabilities;
-
-        /**
-         * The client has support for workspace folders.
-         *
-         * @since 3.6.0
-         */
-        workspaceFolders?: boolean;
-
-        /**
-         * The client supports `workspace/configuration` requests.
-         *
-         * @since 3.6.0
-         */
-        configuration?: boolean;
-
-        /**
-         * Capabilities specific to the semantic token requests scoped to the
-         * workspace.
-         *
-         * @since 3.16.0
-         */
-        semanticTokens?: SemanticTokensWorkspaceClientCapabilities;
-
-        /**
-         * Capabilities specific to the code lens requests scoped to the
-         * workspace.
-         *
-         * @since 3.16.0
-         */
-        codeLens?: CodeLensWorkspaceClientCapabilities;
-
-        /**
-         * The client has support for file requests/notifications.
-         *
-         * @since 3.16.0
-         */
-        fileOperations?: {
-            /**
-             * Whether the client supports dynamic registration for file
-             * requests/notifications.
-             */
-            dynamicRegistration?: boolean;
-
-            /**
-             * The client has support for sending didCreateFiles notifications.
-             */
-            didCreate?: boolean;
-
-            /**
-             * The client has support for sending willCreateFiles requests.
-             */
-            willCreate?: boolean;
-
-            /**
-             * The client has support for sending didRenameFiles notifications.
-             */
-            didRename?: boolean;
-
-            /**
-             * The client has support for sending willRenameFiles requests.
-             */
-            willRename?: boolean;
-
-            /**
-             * The client has support for sending didDeleteFiles notifications.
-             */
-            didDelete?: boolean;
-
-            /**
-             * The client has support for sending willDeleteFiles requests.
-             */
-            willDelete?: boolean;
-        };
-    };
+    applyEdit?: boolean;
 
     /**
-     * Text document specific client capabilities.
+     * Capabilities specific to `WorkspaceEdit`s
      */
-    textDocument?: TextDocumentClientCapabilities;
+    workspaceEdit?: WorkspaceEditClientCapabilities;
 
     /**
-     * Window specific client capabilities.
+     * Capabilities specific to the `workspace/didChangeConfiguration`
+     * notification.
      */
-    window?: {
-        /**
-         * Whether client supports handling progress notifications. If set
-         * servers are allowed to report in `workDoneProgress` property in the
-         * request specific server capabilities.
-         *
-         * @since 3.15.0
-         */
-        workDoneProgress?: boolean;
-
-        /**
-         * Capabilities specific to the showMessage request
-         *
-         * @since 3.16.0
-         */
-        showMessage?: ShowMessageRequestClientCapabilities;
-
-        /**
-         * Client capabilities for the show document request.
-         *
-         * @since 3.16.0
-         */
-        showDocument?: ShowDocumentClientCapabilities;
-    };
+    didChangeConfiguration?: DidChangeConfigurationClientCapabilities;
 
     /**
-     * General client capabilities.
+     * Capabilities specific to the `workspace/didChangeWatchedFiles`
+     * notification.
+     */
+    didChangeWatchedFiles?: DidChangeWatchedFilesClientCapabilities;
+
+    /**
+     * Capabilities specific to the `workspace/symbol` request.
+     */
+    symbol?: WorkspaceSymbolClientCapabilities;
+
+    /**
+     * Capabilities specific to the `workspace/executeCommand` request.
+     */
+    executeCommand?: ExecuteCommandClientCapabilities;
+
+    /**
+     * The client has support for workspace folders.
+     *
+     * @since 3.6.0
+     */
+    workspaceFolders?: boolean;
+
+    /**
+     * The client supports `workspace/configuration` requests.
+     *
+     * @since 3.6.0
+     */
+    configuration?: boolean;
+
+    /**
+     * Capabilities specific to the semantic token requests scoped to the
+     * workspace.
      *
      * @since 3.16.0
      */
-    general?: {
-        /**
-         * Client capability that signals how the client
-         * handles stale requests (e.g. a request
-         * for which the client will not process the response
-         * anymore since the information is outdated).
-         *
-         * @since 3.17.0
-         */
-        staleRequestSupport?: {
-            /**
-             * The client will actively cancel the request.
-             */
-            cancel: boolean;
-
-            /**
-             * The list of requests for which the client
-             * will retry the request if it receives a
-             * response with error code `ContentModified``
-             */
-            retryOnContentModified: string[];
-        }
-
-        /**
-         * Client capabilities specific to regular expressions.
-         *
-         * @since 3.16.0
-         */
-        regularExpressions?: RegularExpressionsClientCapabilities;
-
-        /**
-         * Client capabilities specific to the client's markdown parser.
-         *
-         * @since 3.16.0
-         */
-        markdown?: MarkdownClientCapabilities;
-    };
+    semanticTokens?: SemanticTokensWorkspaceClientCapabilities;
 
     /**
-     * Experimental client capabilities.
+     * Capabilities specific to the code lens requests scoped to the
+     * workspace.
+     *
+     * @since 3.16.0
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    experimental?: any;
+    codeLens?: CodeLensWorkspaceClientCapabilities;
+
+    /**
+     * The client has support for file requests/notifications.
+     *
+     * @since 3.16.0
+     */
+    fileOperations?: {
+      /**
+       * Whether the client supports dynamic registration for file
+       * requests/notifications.
+       */
+      dynamicRegistration?: boolean;
+
+      /**
+       * The client has support for sending didCreateFiles notifications.
+       */
+      didCreate?: boolean;
+
+      /**
+       * The client has support for sending willCreateFiles requests.
+       */
+      willCreate?: boolean;
+
+      /**
+       * The client has support for sending didRenameFiles notifications.
+       */
+      didRename?: boolean;
+
+      /**
+       * The client has support for sending willRenameFiles requests.
+       */
+      willRename?: boolean;
+
+      /**
+       * The client has support for sending didDeleteFiles notifications.
+       */
+      didDelete?: boolean;
+
+      /**
+       * The client has support for sending willDeleteFiles requests.
+       */
+      willDelete?: boolean;
+    };
+  };
+
+  /**
+   * Text document specific client capabilities.
+   */
+  textDocument?: TextDocumentClientCapabilities;
+
+  /**
+   * Window specific client capabilities.
+   */
+  window?: {
+    /**
+     * Whether client supports handling progress notifications. If set
+     * servers are allowed to report in `workDoneProgress` property in the
+     * request specific server capabilities.
+     *
+     * @since 3.15.0
+     */
+    workDoneProgress?: boolean;
+
+    /**
+     * Capabilities specific to the showMessage request
+     *
+     * @since 3.16.0
+     */
+    showMessage?: ShowMessageRequestClientCapabilities;
+
+    /**
+     * Client capabilities for the show document request.
+     *
+     * @since 3.16.0
+     */
+    showDocument?: ShowDocumentClientCapabilities;
+  };
+
+  /**
+   * General client capabilities.
+   *
+   * @since 3.16.0
+   */
+  general?: {
+    /**
+     * Client capability that signals how the client
+     * handles stale requests (e.g. a request
+     * for which the client will not process the response
+     * anymore since the information is outdated).
+     *
+     * @since 3.17.0
+     */
+    staleRequestSupport?: {
+      /**
+       * The client will actively cancel the request.
+       */
+      cancel: boolean;
+
+      /**
+       * The list of requests for which the client
+       * will retry the request if it receives a
+       * response with error code `ContentModified``
+       */
+      retryOnContentModified: string[];
+    }
+
+    /**
+     * Client capabilities specific to regular expressions.
+     *
+     * @since 3.16.0
+     */
+    regularExpressions?: RegularExpressionsClientCapabilities;
+
+    /**
+     * Client capabilities specific to the client's markdown parser.
+     *
+     * @since 3.16.0
+     */
+    markdown?: MarkdownClientCapabilities;
+
+    /**
+     * The position encodings supported by the client. Client and server
+     * have to agree on the same position encoding to ensure that offsets
+     * (e.g. character position in a line) are interpreted the same on both
+     * side.
+     *
+     * To keep the protocol backwards compatible the following applies: if
+     * the value 'utf-16' is missing from the array of position encodings
+     * servers can assume that the client supports UTF-16. UTF-16 is
+     * therefore a mandatory encoding.
+     *
+     * If omitted it defaults to ['utf-16'].
+     *
+     * Implementation considerations: since the conversion from one encoding
+     * into another requires the content of the file / line the conversion
+     * is best done where the file is read which is usually on the server
+     * side.
+     *
+     * @since 3.17.0
+     */
+    positionEncodings?: PositionEncodingKind[];
+  };
+
+  /**
+   * Experimental client capabilities.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  experimental?: any;
 }
 
 export interface WorkspaceFolder {
-    /**
-     * The associated URI for this workspace folder.
-     */
-    uri: DocumentUri;
+  /**
+   * The associated URI for this workspace folder.
+   */
+  uri: DocumentUri;
 
-    /**
-     * The name of the workspace folder. Used to refer to this
-     * workspace folder in the user interface.
-     */
-    name: string;
+  /**
+   * The name of the workspace folder. Used to refer to this
+   * workspace folder in the user interface.
+   */
+  name: string;
 }
 
 export interface ApplyWorkspaceEditParams {
-    /**
-     * An optional label of the workspace edit. This label is
-     * presented in the user interface for example on an undo
-     * stack to undo the workspace edit.
-     */
-    label?: string;
+  /**
+   * An optional label of the workspace edit. This label is
+   * presented in the user interface for example on an undo
+   * stack to undo the workspace edit.
+   */
+  label?: string;
 
-    /**
-     * The edits to apply.
-     */
-    edit: WorkspaceEdit;
+  /**
+   * The edits to apply.
+   */
+  edit: WorkspaceEdit;
 }
 
 export interface WorkspaceEdit {
-    /**
-     * Holds changes to existing resources.
-     */
-    changes?: { [uri: string]: TextEdit[]; };
+  /**
+   * Holds changes to existing resources.
+   */
+  changes?: { [uri: string]: TextEdit[]; };
 
-    /**
-     * Depending on the client capability
-     * `workspace.workspaceEdit.resourceOperations` document changes are either
-     * an array of `TextDocumentEdit`s to express changes to n different text
-     * documents where each text document edit addresses a specific version of
-     * a text document. Or it can contain above `TextDocumentEdit`s mixed with
-     * create, rename and delete file / folder operations.
-     *
-     * Whether a client supports versioned document edits is expressed via
-     * `workspace.workspaceEdit.documentChanges` client capability.
-     *
-     * If a client neither supports `documentChanges` nor
-     * `workspace.workspaceEdit.resourceOperations` then only plain `TextEdit`s
-     * using the `changes` property are supported.
-     */
-    documentChanges?: (
-        TextDocumentEdit[] |
-        (TextDocumentEdit | CreateFile | RenameFile | DeleteFile)[]
-    );
+  /**
+   * Depending on the client capability
+   * `workspace.workspaceEdit.resourceOperations` document changes are either
+   * an array of `TextDocumentEdit`s to express changes to n different text
+   * documents where each text document edit addresses a specific version of
+   * a text document. Or it can contain above `TextDocumentEdit`s mixed with
+   * create, rename and delete file / folder operations.
+   *
+   * Whether a client supports versioned document edits is expressed via
+   * `workspace.workspaceEdit.documentChanges` client capability.
+   *
+   * If a client neither supports `documentChanges` nor
+   * `workspace.workspaceEdit.resourceOperations` then only plain `TextEdit`s
+   * using the `changes` property are supported.
+   */
+  documentChanges?: (
+    TextDocumentEdit[] |
+    (TextDocumentEdit | CreateFile | RenameFile | DeleteFile)[]
+  );
 
-    /**
-     * A map of change annotations that can be referenced in
-     * `AnnotatedTextEdit`s or create, rename and delete file / folder
-     * operations.
-     *
-     * Whether clients honor this property depends on the client capability
-     * `workspace.changeAnnotationSupport`.
-     *
-     * @since 3.16.0
-     */
-    changeAnnotations?: {
-        [id: string /* ChangeAnnotationIdentifier */]: ChangeAnnotation;
-    };
+  /**
+   * A map of change annotations that can be referenced in
+   * `AnnotatedTextEdit`s or create, rename and delete file / folder
+   * operations.
+   *
+   * Whether clients honor this property depends on the client capability
+   * `workspace.changeAnnotationSupport`.
+   *
+   * @since 3.16.0
+   */
+  changeAnnotations?: {
+    [id: string /* ChangeAnnotationIdentifier */]: ChangeAnnotation;
+  };
 }
 
 interface TextEdit {
-    /**
-     * The range of the text document to be manipulated. To insert
-     * text into a document create a range where start === end.
-     */
-    range: Range;
+  /**
+   * The range of the text document to be manipulated. To insert
+   * text into a document create a range where start === end.
+   */
+  range: Range;
 
-    /**
-     * The string to be inserted. For delete operations use an
-     * empty string.
-     */
-    newText: string;
+  /**
+   * The string to be inserted. For delete operations use an
+   * empty string.
+   */
+  newText: string;
 }
 
 interface Range {
-    /**
-     * The range's start position.
-     */
-    start: Position;
+  /**
+   * The range's start position.
+   */
+  start: Position;
 
-    /**
-     * The range's end position.
-     */
-    end: Position;
+  /**
+   * The range's end position.
+   */
+  end: Position;
 }
 
 interface Position {
-    /**
-     * Line position in a document (zero-based).
-     */
-    line: uinteger;
+  /**
+   * Line position in a document (zero-based).
+   */
+  line: uinteger;
 
-    /**
-     * Character offset on a line in a document (zero-based). Assuming that
-     * the line is represented as a string, the `character` value represents
-     * the gap between the `character` and `character + 1`.
-     *
-     * If the character value is greater than the line length it defaults back
-     * to the line length.
-     */
-    character: uinteger;
+  /**
+   * Character offset on a line in a document (zero-based). Assuming that
+   * the line is represented as a string, the `character` value represents
+   * the gap between the `character` and `character + 1`.
+   *
+   * If the character value is greater than the line length it defaults back
+   * to the line length.
+   */
+  character: uinteger;
 }
 
 export interface TextDocumentEdit {
-    /**
-     * The text document to change.
-     */
-    textDocument: OptionalVersionedTextDocumentIdentifier;
+  /**
+   * The text document to change.
+   */
+  textDocument: OptionalVersionedTextDocumentIdentifier;
 
-    /**
-     * The edits to be applied.
-     *
-     * @since 3.16.0 - support for AnnotatedTextEdit. This is guarded by the
-     * client capability `workspace.workspaceEdit.changeAnnotationSupport`
-     */
-    edits: (TextEdit | AnnotatedTextEdit)[];
+  /**
+   * The edits to be applied.
+   *
+   * @since 3.16.0 - support for AnnotatedTextEdit. This is guarded by the
+   * client capability `workspace.workspaceEdit.changeAnnotationSupport`
+   */
+  edits: (TextEdit | AnnotatedTextEdit)[];
 }
+
+/**
+ * An event describing a change to a text document. If only a text is provided
+ * it is considered to be the full content of the document.
+ */
+export type TextDocumentContentChangeEvent = {
+  /**
+   * The range of the document that changed.
+   */
+  range: Range;
+
+  /**
+   * The optional length of the range that got replaced.
+   *
+   * @deprecated use range instead.
+   */
+  rangeLength?: uinteger;
+
+  /**
+   * The new text for the provided range.
+   */
+  text: string;
+} | {
+  /**
+   * The new text of the whole document.
+   */
+  text: string;
+};
 
 interface TextDocumentIdentifier {
-    /**
-     * The text document's URI.
-     */
-    uri: DocumentUri;
+  /**
+   * The text document's URI.
+   */
+  uri: DocumentUri;
 }
 
+interface VersionedTextDocumentIdentifier extends TextDocumentIdentifier {
+  /**
+   * The version number of this document.
+   *
+   * The version number of a document will increase after each change,
+   * including undo/redo. The number doesn't need to be consecutive.
+   */
+  version: integer;
+}
 
 interface OptionalVersionedTextDocumentIdentifier extends TextDocumentIdentifier {
-    /**
-     * The version number of this document. If an optional versioned text document
-     * identifier is sent from the server to the client and the file is not
-     * open in the editor (the server has not received an open notification
-     * before) the server can send `null` to indicate that the version is
-     * known and the content on disk is the master (as specified with document
-     * content ownership).
-     *
-     * The version number of a document will increase after each change,
-     * including undo/redo. The number doesn't need to be consecutive.
-     */
-    version: integer | null;
+  /**
+   * The version number of this document. If an optional versioned text document
+   * identifier is sent from the server to the client and the file is not
+   * open in the editor (the server has not received an open notification
+   * before) the server can send `null` to indicate that the version is
+   * known and the content on disk is the master (as specified with document
+   * content ownership).
+   *
+   * The version number of a document will increase after each change,
+   * including undo/redo. The number doesn't need to be consecutive.
+   */
+  version: integer | null;
 }
 
 /**
@@ -488,141 +585,141 @@ interface OptionalVersionedTextDocumentIdentifier extends TextDocumentIdentifier
  * @since 3.16.0.
  */
 export interface AnnotatedTextEdit extends TextEdit {
-    /**
-     * The actual annotation identifier.
-     */
-    annotationId: ChangeAnnotationIdentifier;
+  /**
+   * The actual annotation identifier.
+   */
+  annotationId: ChangeAnnotationIdentifier;
 }
 
 /**
  * Create file operation
  */
 export interface CreateFile {
-    /**
-     * A create
-     */
-    kind: 'create';
+  /**
+   * A create
+   */
+  kind: 'create';
 
-    /**
-     * The resource to create.
-     */
-    uri: DocumentUri;
+  /**
+   * The resource to create.
+   */
+  uri: DocumentUri;
 
-    /**
-     * Additional options
-     */
-    options?: CreateFileOptions;
+  /**
+   * Additional options
+   */
+  options?: CreateFileOptions;
 
-    /**
-     * An optional annotation identifer describing the operation.
-     *
-     * @since 3.16.0
-     */
-    annotationId?: ChangeAnnotationIdentifier;
+  /**
+   * An optional annotation identifer describing the operation.
+   *
+   * @since 3.16.0
+   */
+  annotationId?: ChangeAnnotationIdentifier;
 }
 
 /**
  * Options to create a file.
  */
 export interface CreateFileOptions {
-    /**
-     * Overwrite existing file. Overwrite wins over `ignoreIfExists`
-     */
-    overwrite?: boolean;
+  /**
+   * Overwrite existing file. Overwrite wins over `ignoreIfExists`
+   */
+  overwrite?: boolean;
 
-    /**
-     * Ignore if exists.
-     */
-    ignoreIfExists?: boolean;
+  /**
+   * Ignore if exists.
+   */
+  ignoreIfExists?: boolean;
 }
 
 /**
  * Rename file operation
  */
 export interface RenameFile {
-    /**
-     * A rename
-     */
-    kind: 'rename';
+  /**
+   * A rename
+   */
+  kind: 'rename';
 
-    /**
-     * The old (existing) location.
-     */
-    oldUri: DocumentUri;
+  /**
+   * The old (existing) location.
+   */
+  oldUri: DocumentUri;
 
-    /**
-     * The new location.
-     */
-    newUri: DocumentUri;
+  /**
+   * The new location.
+   */
+  newUri: DocumentUri;
 
-    /**
-     * Rename options.
-     */
-    options?: RenameFileOptions;
+  /**
+   * Rename options.
+   */
+  options?: RenameFileOptions;
 
-    /**
-     * An optional annotation identifer describing the operation.
-     *
-     * @since 3.16.0
-     */
-    annotationId?: ChangeAnnotationIdentifier;
+  /**
+   * An optional annotation identifer describing the operation.
+   *
+   * @since 3.16.0
+   */
+  annotationId?: ChangeAnnotationIdentifier;
 }
 
 /**
  * Rename file options
  */
 export interface RenameFileOptions {
-    /**
-     * Overwrite target if existing. Overwrite wins over `ignoreIfExists`
-     */
-    overwrite?: boolean;
+  /**
+   * Overwrite target if existing. Overwrite wins over `ignoreIfExists`
+   */
+  overwrite?: boolean;
 
-    /**
-     * Ignores if target exists.
-     */
-    ignoreIfExists?: boolean;
+  /**
+   * Ignores if target exists.
+   */
+  ignoreIfExists?: boolean;
 }
 
 /**
  * Delete file operation
  */
 export interface DeleteFile {
-    /**
-     * A delete
-     */
-    kind: 'delete';
+  /**
+   * A delete
+   */
+  kind: 'delete';
 
-    /**
-     * The file to delete.
-     */
-    uri: DocumentUri;
+  /**
+   * The file to delete.
+   */
+  uri: DocumentUri;
 
-    /**
-     * Delete options.
-     */
-    options?: DeleteFileOptions;
+  /**
+   * Delete options.
+   */
+  options?: DeleteFileOptions;
 
-    /**
-     * An optional annotation identifer describing the operation.
-     *
-     * @since 3.16.0
-     */
-    annotationId?: ChangeAnnotationIdentifier;
+  /**
+   * An optional annotation identifer describing the operation.
+   *
+   * @since 3.16.0
+   */
+  annotationId?: ChangeAnnotationIdentifier;
 }
 
 /**
  * Delete file options
  */
 export interface DeleteFileOptions {
-    /**
-     * Delete the content recursively if a folder is denoted.
-     */
-    recursive?: boolean;
+  /**
+   * Delete the content recursively if a folder is denoted.
+   */
+  recursive?: boolean;
 
-    /**
-     * Ignore the operation if the file doesn't exist.
-     */
-    ignoreIfNotExists?: boolean;
+  /**
+   * Ignore the operation if the file doesn't exist.
+   */
+  ignoreIfNotExists?: boolean;
 }
 
 /**
@@ -631,71 +728,71 @@ export interface DeleteFileOptions {
  * @since 3.16.0
  */
 export interface ChangeAnnotation {
-    /**
-     * A human-readable string describing the actual change. The string
-     * is rendered prominent in the user interface.
-     */
-    label: string;
+  /**
+   * A human-readable string describing the actual change. The string
+   * is rendered prominent in the user interface.
+   */
+  label: string;
 
-    /**
-     * A flag which indicates that user confirmation is needed
-     * before applying the change.
-     */
-    needsConfirmation?: boolean;
+  /**
+   * A flag which indicates that user confirmation is needed
+   * before applying the change.
+   */
+  needsConfirmation?: boolean;
 
-    /**
-     * A human-readable string which is rendered less prominent in
-     * the user interface.
-     */
-    description?: string;
+  /**
+   * A human-readable string which is rendered less prominent in
+   * the user interface.
+   */
+  description?: string;
 }
 
 export interface WorkspaceEditClientCapabilities {
-    /**
-     * The client supports versioned document changes in `WorkspaceEdit`s
-     */
-    documentChanges?: boolean;
+  /**
+   * The client supports versioned document changes in `WorkspaceEdit`s
+   */
+  documentChanges?: boolean;
 
-    /**
-     * The resource operations the client supports. Clients should at least
-     * support 'create', 'rename' and 'delete' files and folders.
-     *
-     * @since 3.13.0
-     */
-    resourceOperations?: ResourceOperationKind[];
+  /**
+   * The resource operations the client supports. Clients should at least
+   * support 'create', 'rename' and 'delete' files and folders.
+   *
+   * @since 3.13.0
+   */
+  resourceOperations?: ResourceOperationKind[];
 
-    /**
-     * The failure handling strategy of a client if applying the workspace edit
-     * fails.
-     *
-     * @since 3.13.0
-     */
-    failureHandling?: FailureHandlingKind;
+  /**
+   * The failure handling strategy of a client if applying the workspace edit
+   * fails.
+   *
+   * @since 3.13.0
+   */
+  failureHandling?: FailureHandlingKind;
 
-    /**
-     * Whether the client normalizes line endings to the client specific
-     * setting.
-     * If set to `true` the client will normalize line ending characters
-     * in a workspace edit to the client specific new line character(s).
-     *
-     * @since 3.16.0
-     */
-    normalizesLineEndings?: boolean;
+  /**
+   * Whether the client normalizes line endings to the client specific
+   * setting.
+   * If set to `true` the client will normalize line ending characters
+   * in a workspace edit to the client specific new line character(s).
+   *
+   * @since 3.16.0
+   */
+  normalizesLineEndings?: boolean;
 
+  /**
+   * Whether the client in general supports change annotations on text edits,
+   * create file, rename file and delete file changes.
+   *
+   * @since 3.16.0
+   */
+  changeAnnotationSupport?: {
     /**
-     * Whether the client in general supports change annotations on text edits,
-     * create file, rename file and delete file changes.
-     *
-     * @since 3.16.0
+     * Whether the client groups edits with equal labels into tree nodes,
+     * for instance all edits labelled with "Changes in Strings" would
+     * be a tree node.
      */
-    changeAnnotationSupport?: {
-        /**
-         * Whether the client groups edits with equal labels into tree nodes,
-         * for instance all edits labelled with "Changes in Strings" would
-         * be a tree node.
-         */
-        groupsOnLabel?: boolean;
-    };
+    groupsOnLabel?: boolean;
+  };
 }
 
 /**
@@ -704,127 +801,127 @@ export interface WorkspaceEditClientCapabilities {
 export type ResourceOperationKind = 'create' | 'rename' | 'delete';
 
 export type FailureHandlingKind = 'abort' | 'transactional' | 'undo'
-    | 'textOnlyTransactional';
+  | 'textOnlyTransactional';
 
 export interface DidChangeConfigurationClientCapabilities {
-    /**
-     * Did change configuration notification supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Did change configuration notification supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface DidChangeWatchedFilesClientCapabilities {
-    /**
-     * Did change watched files notification supports dynamic registration.
-     * Please note that the current protocol doesn't support static
-     * configuration for file changes from the server side.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Did change watched files notification supports dynamic registration.
+   * Please note that the current protocol doesn't support static
+   * configuration for file changes from the server side.
+   */
+  dynamicRegistration?: boolean;
 }
 
 interface WorkspaceSymbolClientCapabilities {
-    /**
-     * Symbol request supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Symbol request supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
+  /**
+   * Specific capabilities for the `SymbolKind` in the `workspace/symbol`
+   * request.
+   */
+  symbolKind?: {
     /**
-     * Specific capabilities for the `SymbolKind` in the `workspace/symbol`
-     * request.
-     */
-    symbolKind?: {
-        /**
-         * The symbol kind values the client supports. When this
-         * property exists the client also guarantees that it will
-         * handle values outside its set gracefully and falls back
-         * to a default value when unknown.
-         *
-         * If this property is not present the client only supports
-         * the symbol kinds from `File` to `Array` as defined in
-         * the initial version of the protocol.
-         */
-        valueSet?: SymbolKind[];
-    };
-
-    /**
-     * The client supports tags on `SymbolInformation`.
-     * Clients supporting tags have to handle unknown tags gracefully.
+     * The symbol kind values the client supports. When this
+     * property exists the client also guarantees that it will
+     * handle values outside its set gracefully and falls back
+     * to a default value when unknown.
      *
-     * @since 3.16.0
+     * If this property is not present the client only supports
+     * the symbol kinds from `File` to `Array` as defined in
+     * the initial version of the protocol.
      */
-    tagSupport?: {
-        /**
-         * The tags supported by the client.
-         */
-        valueSet: SymbolTag[];
-    };
+    valueSet?: SymbolKind[];
+  };
+
+  /**
+   * The client supports tags on `SymbolInformation`.
+   * Clients supporting tags have to handle unknown tags gracefully.
+   *
+   * @since 3.16.0
+   */
+  tagSupport?: {
+    /**
+     * The tags supported by the client.
+     */
+    valueSet: SymbolTag[];
+  };
 }
 
 /**
  * A symbol kind.
  */
 export enum SymbolKind {
-    File = 1,
-    Module = 2,
-    Namespace = 3,
-    Package = 4,
-    Class = 5,
-    Method = 6,
-    Property = 7,
-    Field = 8,
-    Constructor = 9,
-    Enum = 10,
-    Interface = 11,
-    Function = 12,
-    Variable = 13,
-    Constant = 14,
-    String = 15,
-    Number = 16,
-    Boolean = 17,
-    Array = 18,
-    Object = 19,
-    Key = 20,
-    Null = 21,
-    EnumMember = 22,
-    Struct = 23,
-    Event = 24,
-    Operator = 25,
-    TypeParameter = 26
+  File = 1,
+  Module = 2,
+  Namespace = 3,
+  Package = 4,
+  Class = 5,
+  Method = 6,
+  Property = 7,
+  Field = 8,
+  Constructor = 9,
+  Enum = 10,
+  Interface = 11,
+  Function = 12,
+  Variable = 13,
+  Constant = 14,
+  String = 15,
+  Number = 16,
+  Boolean = 17,
+  Array = 18,
+  Object = 19,
+  Key = 20,
+  Null = 21,
+  EnumMember = 22,
+  Struct = 23,
+  Event = 24,
+  Operator = 25,
+  TypeParameter = 26
 }
 
 export type SymbolTag = 1;
 
 export interface ExecuteCommandClientCapabilities {
-    /**
-     * Execute command supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Execute command supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface SemanticTokensWorkspaceClientCapabilities {
-    /**
-     * Whether the client implementation supports a refresh request sent from
-     * the server to the client.
-     *
-     * Note that this event is global and will force the client to refresh all
-     * semantic tokens currently shown. It should be used with absolute care
-     * and is useful for situation where a server for example detect a project
-     * wide change that requires such a calculation.
-     */
-    refreshSupport?: boolean;
+  /**
+   * Whether the client implementation supports a refresh request sent from
+   * the server to the client.
+   *
+   * Note that this event is global and will force the client to refresh all
+   * semantic tokens currently shown. It should be used with absolute care
+   * and is useful for situation where a server for example detect a project
+   * wide change that requires such a calculation.
+   */
+  refreshSupport?: boolean;
 }
 
 export interface CodeLensWorkspaceClientCapabilities {
-    /**
-     * Whether the client implementation supports a refresh request sent from the
-     * server to the client.
-     *
-     * Note that this event is global and will force the client to refresh all
-     * code lenses currently shown. It should be used with absolute care and is
-     * useful for situation where a server for example detect a project wide
-     * change that requires such a calculation.
-     */
-    refreshSupport?: boolean;
+  /**
+   * Whether the client implementation supports a refresh request sent from the
+   * server to the client.
+   *
+   * Note that this event is global and will force the client to refresh all
+   * code lenses currently shown. It should be used with absolute care and is
+   * useful for situation where a server for example detect a project wide
+   * change that requires such a calculation.
+   */
+  refreshSupport?: boolean;
 }
 
 /**
@@ -832,306 +929,306 @@ export interface CodeLensWorkspaceClientCapabilities {
  */
 export interface TextDocumentClientCapabilities {
 
-    synchronization?: TextDocumentSyncClientCapabilities;
+  synchronization?: TextDocumentSyncClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/completion` request.
-     */
-    completion?: CompletionClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/completion` request.
+   */
+  completion?: CompletionClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/hover` request.
-     */
-    hover?: HoverClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/hover` request.
+   */
+  hover?: HoverClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/signatureHelp` request.
-     */
-    signatureHelp?: SignatureHelpClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/signatureHelp` request.
+   */
+  signatureHelp?: SignatureHelpClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/declaration` request.
-     *
-     * @since 3.14.0
-     */
-    declaration?: DeclarationClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/declaration` request.
+   *
+   * @since 3.14.0
+   */
+  declaration?: DeclarationClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/definition` request.
-     */
-    definition?: DefinitionClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/definition` request.
+   */
+  definition?: DefinitionClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/typeDefinition` request.
-     *
-     * @since 3.6.0
-     */
-    typeDefinition?: TypeDefinitionClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/typeDefinition` request.
+   *
+   * @since 3.6.0
+   */
+  typeDefinition?: TypeDefinitionClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/implementation` request.
-     *
-     * @since 3.6.0
-     */
-    implementation?: ImplementationClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/implementation` request.
+   *
+   * @since 3.6.0
+   */
+  implementation?: ImplementationClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/references` request.
-     */
-    references?: ReferenceClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/references` request.
+   */
+  references?: ReferenceClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/documentHighlight` request.
-     */
-    documentHighlight?: DocumentHighlightClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/documentHighlight` request.
+   */
+  documentHighlight?: DocumentHighlightClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/documentSymbol` request.
-     */
-    documentSymbol?: DocumentSymbolClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/documentSymbol` request.
+   */
+  documentSymbol?: DocumentSymbolClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/codeAction` request.
-     */
-    codeAction?: CodeActionClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/codeAction` request.
+   */
+  codeAction?: CodeActionClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/codeLens` request.
-     */
-    codeLens?: CodeLensClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/codeLens` request.
+   */
+  codeLens?: CodeLensClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/documentLink` request.
-     */
-    documentLink?: DocumentLinkClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/documentLink` request.
+   */
+  documentLink?: DocumentLinkClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/documentColor` and the
-     * `textDocument/colorPresentation` request.
-     *
-     * @since 3.6.0
-     */
-    colorProvider?: DocumentColorClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/documentColor` and the
+   * `textDocument/colorPresentation` request.
+   *
+   * @since 3.6.0
+   */
+  colorProvider?: DocumentColorClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/formatting` request.
-     */
-    formatting?: DocumentFormattingClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/formatting` request.
+   */
+  formatting?: DocumentFormattingClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/rangeFormatting` request.
-     */
-    rangeFormatting?: DocumentRangeFormattingClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/rangeFormatting` request.
+   */
+  rangeFormatting?: DocumentRangeFormattingClientCapabilities;
 
-    /** request.
-     * Capabilities specific to the `textDocument/onTypeFormatting` request.
-     */
-    onTypeFormatting?: DocumentOnTypeFormattingClientCapabilities;
+  /** request.
+   * Capabilities specific to the `textDocument/onTypeFormatting` request.
+   */
+  onTypeFormatting?: DocumentOnTypeFormattingClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/rename` request.
-     */
-    rename?: RenameClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/rename` request.
+   */
+  rename?: RenameClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/publishDiagnostics`
-     * notification.
-     */
-    publishDiagnostics?: PublishDiagnosticsClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/publishDiagnostics`
+   * notification.
+   */
+  publishDiagnostics?: PublishDiagnosticsClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/foldingRange` request.
-     *
-     * @since 3.10.0
-     */
-    foldingRange?: FoldingRangeClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/foldingRange` request.
+   *
+   * @since 3.10.0
+   */
+  foldingRange?: FoldingRangeClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/selectionRange` request.
-     *
-     * @since 3.15.0
-     */
-    selectionRange?: SelectionRangeClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/selectionRange` request.
+   *
+   * @since 3.15.0
+   */
+  selectionRange?: SelectionRangeClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/linkedEditingRange` request.
-     *
-     * @since 3.16.0
-     */
-    linkedEditingRange?: LinkedEditingRangeClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/linkedEditingRange` request.
+   *
+   * @since 3.16.0
+   */
+  linkedEditingRange?: LinkedEditingRangeClientCapabilities;
 
-    /**
-     * Capabilities specific to the various call hierarchy requests.
-     *
-     * @since 3.16.0
-     */
-    callHierarchy?: CallHierarchyClientCapabilities;
+  /**
+   * Capabilities specific to the various call hierarchy requests.
+   *
+   * @since 3.16.0
+   */
+  callHierarchy?: CallHierarchyClientCapabilities;
 
-    /**
-     * Capabilities specific to the various semantic token requests.
-     *
-     * @since 3.16.0
-     */
-    semanticTokens?: SemanticTokensClientCapabilities;
+  /**
+   * Capabilities specific to the various semantic token requests.
+   *
+   * @since 3.16.0
+   */
+  semanticTokens?: SemanticTokensClientCapabilities;
 
-    /**
-     * Capabilities specific to the `textDocument/moniker` request.
-     *
-     * @since 3.16.0
-     */
-    moniker?: MonikerClientCapabilities;
+  /**
+   * Capabilities specific to the `textDocument/moniker` request.
+   *
+   * @since 3.16.0
+   */
+  moniker?: MonikerClientCapabilities;
 }
 
 export interface TextDocumentSyncClientCapabilities {
-    /**
-     * Whether text document synchronization supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether text document synchronization supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * The client supports sending will save notifications.
-     */
-    willSave?: boolean;
+  /**
+   * The client supports sending will save notifications.
+   */
+  willSave?: boolean;
 
-    /**
-     * The client supports sending a will save request and
-     * waits for a response providing text edits which will
-     * be applied to the document before it is saved.
-     */
-    willSaveWaitUntil?: boolean;
+  /**
+   * The client supports sending a will save request and
+   * waits for a response providing text edits which will
+   * be applied to the document before it is saved.
+   */
+  willSaveWaitUntil?: boolean;
 
-    /**
-     * The client supports did save notifications.
-     */
-    didSave?: boolean;
+  /**
+   * The client supports did save notifications.
+   */
+  didSave?: boolean;
 }
 
 export interface CompletionClientCapabilities {
+  /**
+   * Whether completion supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
+
+  /**
+   * The client supports the following `CompletionItem` specific
+   * capabilities.
+   */
+  completionItem?: {
     /**
-     * Whether completion supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
-
-    /**
-     * The client supports the following `CompletionItem` specific
-     * capabilities.
-     */
-    completionItem?: {
-        /**
-         * Client supports snippets as insert text.
-         *
-         * A snippet can define tab stops and placeholders with `$1`, `$2`
-         * and `${3:foo}`. `$0` defines the final tab stop, it defaults to
-         * the end of the snippet. Placeholders with equal identifiers are
-         * linked, that is typing in one will update others too.
-         */
-        snippetSupport?: boolean;
-
-        /**
-         * Client supports commit characters on a completion item.
-         */
-        commitCharactersSupport?: boolean;
-
-        /**
-         * Client supports the follow content formats for the documentation
-         * property. The order describes the preferred format of the client.
-         */
-        documentationFormat?: MarkupKind[];
-
-        /**
-         * Client supports the deprecated property on a completion item.
-         */
-        deprecatedSupport?: boolean;
-
-        /**
-         * Client supports the preselect property on a completion item.
-         */
-        preselectSupport?: boolean;
-
-        /**
-         * Client supports the tag property on a completion item. Clients
-         * supporting tags have to handle unknown tags gracefully. Clients
-         * especially need to preserve unknown tags when sending a completion
-         * item back to the server in a resolve call.
-         *
-         * @since 3.15.0
-         */
-        tagSupport?: {
-            /**
-             * The tags supported by the client.
-             */
-            valueSet: CompletionItemTag[];
-        };
-
-        /**
-         * Client supports insert replace edit to control different behavior if
-         * a completion item is inserted in the text or should replace text.
-         *
-         * @since 3.16.0
-         */
-        insertReplaceSupport?: boolean;
-
-        /**
-         * Indicates which properties a client can resolve lazily on a
-         * completion item. Before version 3.16.0 only the predefined properties
-         * `documentation` and `detail` could be resolved lazily.
-         *
-         * @since 3.16.0
-         */
-        resolveSupport?: {
-            /**
-             * The properties that a client can resolve lazily.
-             */
-            properties: string[];
-        };
-
-        /**
-         * The client supports the `insertTextMode` property on
-         * a completion item to override the whitespace handling mode
-         * as defined by the client (see `insertTextMode`).
-         *
-         * @since 3.16.0
-         */
-        insertTextModeSupport?: {
-            valueSet: InsertTextMode[];
-        };
-
-        /**
-         * The client has support for completion item label
-         * details (see also `CompletionItemLabelDetails`).
-         *
-         * @since 3.17.0 - proposed state
-         */
-        labelDetailsSupport?: boolean;
-    };
-
-    completionItemKind?: {
-        /**
-         * The completion item kind values the client supports. When this
-         * property exists the client also guarantees that it will
-         * handle values outside its set gracefully and falls back
-         * to a default value when unknown.
-         *
-         * If this property is not present the client only supports
-         * the completion items kinds from `Text` to `Reference` as defined in
-         * the initial version of the protocol.
-         */
-        valueSet?: CompletionItemKind[];
-    };
-
-    /**
-     * The client supports to send additional context information for a
-     * `textDocument/completion` request.
-     */
-    contextSupport?: boolean;
-
-    /**
-     * The client's default when the completion item doesn't provide a
-     * `insertTextMode` property.
+     * Client supports snippets as insert text.
      *
-     * @since 3.17.0
+     * A snippet can define tab stops and placeholders with `$1`, `$2`
+     * and `${3:foo}`. `$0` defines the final tab stop, it defaults to
+     * the end of the snippet. Placeholders with equal identifiers are
+     * linked, that is typing in one will update others too.
      */
-    insertTextMode?: InsertTextMode;
+    snippetSupport?: boolean;
+
+    /**
+     * Client supports commit characters on a completion item.
+     */
+    commitCharactersSupport?: boolean;
+
+    /**
+     * Client supports the follow content formats for the documentation
+     * property. The order describes the preferred format of the client.
+     */
+    documentationFormat?: MarkupKind[];
+
+    /**
+     * Client supports the deprecated property on a completion item.
+     */
+    deprecatedSupport?: boolean;
+
+    /**
+     * Client supports the preselect property on a completion item.
+     */
+    preselectSupport?: boolean;
+
+    /**
+     * Client supports the tag property on a completion item. Clients
+     * supporting tags have to handle unknown tags gracefully. Clients
+     * especially need to preserve unknown tags when sending a completion
+     * item back to the server in a resolve call.
+     *
+     * @since 3.15.0
+     */
+    tagSupport?: {
+      /**
+       * The tags supported by the client.
+       */
+      valueSet: CompletionItemTag[];
+    };
+
+    /**
+     * Client supports insert replace edit to control different behavior if
+     * a completion item is inserted in the text or should replace text.
+     *
+     * @since 3.16.0
+     */
+    insertReplaceSupport?: boolean;
+
+    /**
+     * Indicates which properties a client can resolve lazily on a
+     * completion item. Before version 3.16.0 only the predefined properties
+     * `documentation` and `detail` could be resolved lazily.
+     *
+     * @since 3.16.0
+     */
+    resolveSupport?: {
+      /**
+       * The properties that a client can resolve lazily.
+       */
+      properties: string[];
+    };
+
+    /**
+     * The client supports the `insertTextMode` property on
+     * a completion item to override the whitespace handling mode
+     * as defined by the client (see `insertTextMode`).
+     *
+     * @since 3.16.0
+     */
+    insertTextModeSupport?: {
+      valueSet: InsertTextMode[];
+    };
+
+    /**
+     * The client has support for completion item label
+     * details (see also `CompletionItemLabelDetails`).
+     *
+     * @since 3.17.0 - proposed state
+     */
+    labelDetailsSupport?: boolean;
+  };
+
+  completionItemKind?: {
+    /**
+     * The completion item kind values the client supports. When this
+     * property exists the client also guarantees that it will
+     * handle values outside its set gracefully and falls back
+     * to a default value when unknown.
+     *
+     * If this property is not present the client only supports
+     * the completion items kinds from `Text` to `Reference` as defined in
+     * the initial version of the protocol.
+     */
+    valueSet?: CompletionItemKind[];
+  };
+
+  /**
+   * The client supports to send additional context information for a
+   * `textDocument/completion` request.
+   */
+  contextSupport?: boolean;
+
+  /**
+   * The client's default when the completion item doesn't provide a
+   * `insertTextMode` property.
+   *
+   * @since 3.17.0
+   */
+  insertTextMode?: InsertTextMode;
 }
 
 /**
@@ -1151,299 +1248,299 @@ export type InsertTextMode = 1 | 2;
  * The kind of a completion entry.
  */
 export enum CompletionItemKind {
-    Text = 1,
-    Method = 2,
-    Function = 3,
-    Constructor = 4,
-    Field = 5,
-    Variable = 6,
-    Class = 7,
-    Interface = 8,
-    Module = 9,
-    Property = 10,
-    Unit = 11,
-    Value = 12,
-    Enum = 13,
-    Keyword = 14,
-    Snippet = 15,
-    Color = 16,
-    File = 17,
-    Reference = 18,
-    Folder = 19,
-    EnumMember = 20,
-    Constant = 21,
-    Struct = 22,
-    Event = 23,
-    Operator = 24,
-    TypeParameter = 25,
+  Text = 1,
+  Method = 2,
+  Function = 3,
+  Constructor = 4,
+  Field = 5,
+  Variable = 6,
+  Class = 7,
+  Interface = 8,
+  Module = 9,
+  Property = 10,
+  Unit = 11,
+  Value = 12,
+  Enum = 13,
+  Keyword = 14,
+  Snippet = 15,
+  Color = 16,
+  File = 17,
+  Reference = 18,
+  Folder = 19,
+  EnumMember = 20,
+  Constant = 21,
+  Struct = 22,
+  Event = 23,
+  Operator = 24,
+  TypeParameter = 25,
 }
 
 export interface HoverClientCapabilities {
-    /**
-     * Whether hover supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether hover supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * Client supports the follow content formats if the content
-     * property refers to a `literal of type MarkupContent`.
-     * The order describes the preferred format of the client.
-     */
-    contentFormat?: MarkupKind[];
+  /**
+   * Client supports the follow content formats if the content
+   * property refers to a `literal of type MarkupContent`.
+   * The order describes the preferred format of the client.
+   */
+  contentFormat?: MarkupKind[];
 }
 
 export interface SignatureHelpClientCapabilities {
+  /**
+   * Whether signature help supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
+
+  /**
+   * The client supports the following `SignatureInformation`
+   * specific properties.
+   */
+  signatureInformation?: {
     /**
-     * Whether signature help supports dynamic registration.
+     * Client supports the follow content formats for the documentation
+     * property. The order describes the preferred format of the client.
      */
-    dynamicRegistration?: boolean;
+    documentationFormat?: MarkupKind[];
 
     /**
-     * The client supports the following `SignatureInformation`
-     * specific properties.
+     * Client capabilities specific to parameter information.
      */
-    signatureInformation?: {
-        /**
-         * Client supports the follow content formats for the documentation
-         * property. The order describes the preferred format of the client.
-         */
-        documentationFormat?: MarkupKind[];
-
-        /**
-         * Client capabilities specific to parameter information.
-         */
-        parameterInformation?: {
-            /**
-             * The client supports processing label offsets instead of a
-             * simple label string.
-             *
-             * @since 3.14.0
-             */
-            labelOffsetSupport?: boolean;
-        };
-
-        /**
-         * The client supports the `activeParameter` property on
-         * `SignatureInformation` literal.
-         *
-         * @since 3.16.0
-         */
-        activeParameterSupport?: boolean;
+    parameterInformation?: {
+      /**
+       * The client supports processing label offsets instead of a
+       * simple label string.
+       *
+       * @since 3.14.0
+       */
+      labelOffsetSupport?: boolean;
     };
 
     /**
-     * The client supports to send additional context information for a
-     * `textDocument/signatureHelp` request. A client that opts into
-     * contextSupport will also support the `retriggerCharacters` on
-     * `SignatureHelpOptions`.
+     * The client supports the `activeParameter` property on
+     * `SignatureInformation` literal.
      *
-     * @since 3.15.0
+     * @since 3.16.0
      */
-    contextSupport?: boolean;
+    activeParameterSupport?: boolean;
+  };
+
+  /**
+   * The client supports to send additional context information for a
+   * `textDocument/signatureHelp` request. A client that opts into
+   * contextSupport will also support the `retriggerCharacters` on
+   * `SignatureHelpOptions`.
+   *
+   * @since 3.15.0
+   */
+  contextSupport?: boolean;
 }
 
 export interface DeclarationClientCapabilities {
-    /**
-     * Whether declaration supports dynamic registration. If this is set to
-     * `true` the client supports the new `DeclarationRegistrationOptions`
-     * return value for the corresponding server capability as well.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether declaration supports dynamic registration. If this is set to
+   * `true` the client supports the new `DeclarationRegistrationOptions`
+   * return value for the corresponding server capability as well.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * The client supports additional metadata in the form of declaration links.
-     */
-    linkSupport?: boolean;
+  /**
+   * The client supports additional metadata in the form of declaration links.
+   */
+  linkSupport?: boolean;
 }
 
 export interface DefinitionClientCapabilities {
-    /**
-     * Whether definition supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether definition supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * The client supports additional metadata in the form of definition links.
-     *
-     * @since 3.14.0
-     */
-    linkSupport?: boolean;
+  /**
+   * The client supports additional metadata in the form of definition links.
+   *
+   * @since 3.14.0
+   */
+  linkSupport?: boolean;
 }
 
 export interface TypeDefinitionClientCapabilities {
-    /**
-     * Whether implementation supports dynamic registration. If this is set to
-     * `true` the client supports the new `TypeDefinitionRegistrationOptions`
-     * return value for the corresponding server capability as well.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether implementation supports dynamic registration. If this is set to
+   * `true` the client supports the new `TypeDefinitionRegistrationOptions`
+   * return value for the corresponding server capability as well.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * The client supports additional metadata in the form of definition links.
-     *
-     * @since 3.14.0
-     */
-    linkSupport?: boolean;
+  /**
+   * The client supports additional metadata in the form of definition links.
+   *
+   * @since 3.14.0
+   */
+  linkSupport?: boolean;
 }
 
 export interface ImplementationClientCapabilities {
-    /**
-     * Whether implementation supports dynamic registration. If this is set to
-     * `true` the client supports the new `ImplementationRegistrationOptions`
-     * return value for the corresponding server capability as well.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether implementation supports dynamic registration. If this is set to
+   * `true` the client supports the new `ImplementationRegistrationOptions`
+   * return value for the corresponding server capability as well.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * The client supports additional metadata in the form of definition links.
-     *
-     * @since 3.14.0
-     */
-    linkSupport?: boolean;
+  /**
+   * The client supports additional metadata in the form of definition links.
+   *
+   * @since 3.14.0
+   */
+  linkSupport?: boolean;
 }
 
 export interface ReferenceClientCapabilities {
-    /**
-     * Whether references supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether references supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface DocumentHighlightClientCapabilities {
-    /**
-     * Whether document highlight supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether document highlight supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface DocumentSymbolClientCapabilities {
-    /**
-     * Whether document symbol supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether document symbol supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
+  /**
+   * Specific capabilities for the `SymbolKind` in the
+   * `textDocument/documentSymbol` request.
+   */
+  symbolKind?: {
     /**
-     * Specific capabilities for the `SymbolKind` in the
-     * `textDocument/documentSymbol` request.
-     */
-    symbolKind?: {
-        /**
-         * The symbol kind values the client supports. When this
-         * property exists the client also guarantees that it will
-         * handle values outside its set gracefully and falls back
-         * to a default value when unknown.
-         *
-         * If this property is not present the client only supports
-         * the symbol kinds from `File` to `Array` as defined in
-         * the initial version of the protocol.
-         */
-        valueSet?: SymbolKind[];
-    };
-
-    /**
-     * The client supports hierarchical document symbols.
-     */
-    hierarchicalDocumentSymbolSupport?: boolean;
-
-    /**
-     * The client supports tags on `SymbolInformation`. Tags are supported on
-     * `DocumentSymbol` if `hierarchicalDocumentSymbolSupport` is set to true.
-     * Clients supporting tags have to handle unknown tags gracefully.
+     * The symbol kind values the client supports. When this
+     * property exists the client also guarantees that it will
+     * handle values outside its set gracefully and falls back
+     * to a default value when unknown.
      *
-     * @since 3.16.0
+     * If this property is not present the client only supports
+     * the symbol kinds from `File` to `Array` as defined in
+     * the initial version of the protocol.
      */
-    tagSupport?: {
-        /**
-         * The tags supported by the client.
-         */
-        valueSet: SymbolTag[];
-    };
+    valueSet?: SymbolKind[];
+  };
 
+  /**
+   * The client supports hierarchical document symbols.
+   */
+  hierarchicalDocumentSymbolSupport?: boolean;
+
+  /**
+   * The client supports tags on `SymbolInformation`. Tags are supported on
+   * `DocumentSymbol` if `hierarchicalDocumentSymbolSupport` is set to true.
+   * Clients supporting tags have to handle unknown tags gracefully.
+   *
+   * @since 3.16.0
+   */
+  tagSupport?: {
     /**
-     * The client supports an additional label presented in the UI when
-     * registering a document symbol provider.
-     *
-     * @since 3.16.0
+     * The tags supported by the client.
      */
-    labelSupport?: boolean;
+    valueSet: SymbolTag[];
+  };
+
+  /**
+   * The client supports an additional label presented in the UI when
+   * registering a document symbol provider.
+   *
+   * @since 3.16.0
+   */
+  labelSupport?: boolean;
 }
 
 export interface CodeActionClientCapabilities {
-    /**
-     * Whether code action supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether code action supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
+  /**
+   * The client supports code action literals as a valid
+   * response of the `textDocument/codeAction` request.
+   *
+   * @since 3.8.0
+   */
+  codeActionLiteralSupport?: {
     /**
-     * The client supports code action literals as a valid
-     * response of the `textDocument/codeAction` request.
-     *
-     * @since 3.8.0
+     * The code action kind is supported with the following value
+     * set.
      */
-    codeActionLiteralSupport?: {
-        /**
-         * The code action kind is supported with the following value
-         * set.
-         */
-        codeActionKind: {
+    codeActionKind: {
 
-            /**
-             * The code action kind values the client supports. When this
-             * property exists the client also guarantees that it will
-             * handle values outside its set gracefully and falls back
-             * to a default value when unknown.
-             */
-            valueSet: CodeActionKind[];
-        };
+      /**
+       * The code action kind values the client supports. When this
+       * property exists the client also guarantees that it will
+       * handle values outside its set gracefully and falls back
+       * to a default value when unknown.
+       */
+      valueSet: CodeActionKind[];
     };
+  };
 
+  /**
+   * Whether code action supports the `isPreferred` property.
+   *
+   * @since 3.15.0
+   */
+  isPreferredSupport?: boolean;
+
+  /**
+   * Whether code action supports the `disabled` property.
+   *
+   * @since 3.16.0
+   */
+  disabledSupport?: boolean;
+
+  /**
+   * Whether code action supports the `data` property which is
+   * preserved between a `textDocument/codeAction` and a
+   * `codeAction/resolve` request.
+   *
+   * @since 3.16.0
+   */
+  dataSupport?: boolean;
+
+
+  /**
+   * Whether the client supports resolving additional code action
+   * properties via a separate `codeAction/resolve` request.
+   *
+   * @since 3.16.0
+   */
+  resolveSupport?: {
     /**
-     * Whether code action supports the `isPreferred` property.
-     *
-     * @since 3.15.0
+     * The properties that a client can resolve lazily.
      */
-    isPreferredSupport?: boolean;
+    properties: string[];
+  };
 
-    /**
-     * Whether code action supports the `disabled` property.
-     *
-     * @since 3.16.0
-     */
-    disabledSupport?: boolean;
-
-    /**
-     * Whether code action supports the `data` property which is
-     * preserved between a `textDocument/codeAction` and a
-     * `codeAction/resolve` request.
-     *
-     * @since 3.16.0
-     */
-    dataSupport?: boolean;
-
-
-    /**
-     * Whether the client supports resolving additional code action
-     * properties via a separate `codeAction/resolve` request.
-     *
-     * @since 3.16.0
-     */
-    resolveSupport?: {
-        /**
-         * The properties that a client can resolve lazily.
-         */
-        properties: string[];
-    };
-
-    /**
-     * Whether th client honors the change annotations in
-     * text edits and resource operations returned via the
-     * `CodeAction#edit` property by for example presenting
-     * the workspace edit in the user interface and asking
-     * for confirmation.
-     *
-     * @since 3.16.0
-     */
-    honorsChangeAnnotations?: boolean;
+  /**
+   * Whether th client honors the change annotations in
+   * text edits and resource operations returned via the
+   * `CodeAction#edit` property by for example presenting
+   * the workspace edit in the user interface and asking
+   * for confirmation.
+   *
+   * @since 3.16.0
+   */
+  honorsChangeAnnotations?: boolean;
 }
 
 /**
@@ -1451,353 +1548,353 @@ export interface CodeActionClientCapabilities {
  */
 export enum CodeActionKind {
 
-    /**
-     * Empty kind.
-     */
-    Empty = '',
+  /**
+   * Empty kind.
+   */
+  Empty = '',
 
-    /**
-     * Base kind for quickfix actions: 'quickfix'.
-     */
-    QuickFix = 'quickfix',
+  /**
+   * Base kind for quickfix actions: 'quickfix'.
+   */
+  QuickFix = 'quickfix',
 
-    /**
-     * Base kind for refactoring actions: 'refactor'.
-     */
-    Refactor = 'refactor',
+  /**
+   * Base kind for refactoring actions: 'refactor'.
+   */
+  Refactor = 'refactor',
 
-    /**
-     * Base kind for refactoring extraction actions: 'refactor.extract'.
-     *
-     * Example extract actions:
-     *
-     * - Extract method
-     * - Extract function
-     * - Extract variable
-     * - Extract interface from class
-     * - ...
-     */
-    RefactorExtract = 'refactor.extract',
+  /**
+   * Base kind for refactoring extraction actions: 'refactor.extract'.
+   *
+   * Example extract actions:
+   *
+   * - Extract method
+   * - Extract function
+   * - Extract variable
+   * - Extract interface from class
+   * - ...
+   */
+  RefactorExtract = 'refactor.extract',
 
-    /**
-     * Base kind for refactoring inline actions: 'refactor.inline'.
-     *
-     * Example inline actions:
-     *
-     * - Inline function
-     * - Inline variable
-     * - Inline constant
-     * - ...
-     */
-    RefactorInline = 'refactor.inline',
+  /**
+   * Base kind for refactoring inline actions: 'refactor.inline'.
+   *
+   * Example inline actions:
+   *
+   * - Inline function
+   * - Inline variable
+   * - Inline constant
+   * - ...
+   */
+  RefactorInline = 'refactor.inline',
 
-    /**
-     * Base kind for refactoring rewrite actions: 'refactor.rewrite'.
-     *
-     * Example rewrite actions:
-     *
-     * - Convert JavaScript function to class
-     * - Add or remove parameter
-     * - Encapsulate field
-     * - Make method static
-     * - Move method to base class
-     * - ...
-     */
-    RefactorRewrite = 'refactor.rewrite',
+  /**
+   * Base kind for refactoring rewrite actions: 'refactor.rewrite'.
+   *
+   * Example rewrite actions:
+   *
+   * - Convert JavaScript function to class
+   * - Add or remove parameter
+   * - Encapsulate field
+   * - Make method static
+   * - Move method to base class
+   * - ...
+   */
+  RefactorRewrite = 'refactor.rewrite',
 
-    /**
-     * Base kind for source actions: `source`.
-     *
-     * Source code actions apply to the entire file.
-     */
-    Source = 'source',
+  /**
+   * Base kind for source actions: `source`.
+   *
+   * Source code actions apply to the entire file.
+   */
+  Source = 'source',
 
-    /**
-     * Base kind for an organize imports source action:
-     * `source.organizeImports`.
-     */
-    SourceOrganizeImports =
-    'source.organizeImports',
+  /**
+   * Base kind for an organize imports source action:
+   * `source.organizeImports`.
+   */
+  SourceOrganizeImports =
+  'source.organizeImports',
 }
 
 export interface CodeLensClientCapabilities {
-    /**
-     * Whether code lens supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether code lens supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface DocumentLinkClientCapabilities {
-    /**
-     * Whether document link supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether document link supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * Whether the client supports the `tooltip` property on `DocumentLink`.
-     *
-     * @since 3.15.0
-     */
-    tooltipSupport?: boolean;
+  /**
+   * Whether the client supports the `tooltip` property on `DocumentLink`.
+   *
+   * @since 3.15.0
+   */
+  tooltipSupport?: boolean;
 }
 
 export interface DocumentColorClientCapabilities {
-    /**
-     * Whether document color supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether document color supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface DocumentFormattingClientCapabilities {
-    /**
-     * Whether formatting supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether formatting supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface DocumentRangeFormattingClientCapabilities {
-    /**
-     * Whether formatting supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether formatting supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface DocumentOnTypeFormattingClientCapabilities {
-    /**
-     * Whether on type formatting supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether on type formatting supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export type PrepareSupportDefaultBehavior = 1;
 
 export interface RenameClientCapabilities {
-    /**
-     * Whether rename supports dynamic registration.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether rename supports dynamic registration.
+   */
+  dynamicRegistration?: boolean;
 
-    /**
-     * Client supports testing for validity of rename operations
-     * before execution.
-     *
-     * @since version 3.12.0
-     */
-    prepareSupport?: boolean;
+  /**
+   * Client supports testing for validity of rename operations
+   * before execution.
+   *
+   * @since version 3.12.0
+   */
+  prepareSupport?: boolean;
 
-    /**
-     * Client supports the default behavior result
-     * (`{ defaultBehavior: boolean }`).
-     *
-     * The value indicates the default behavior used by the
-     * client.
-     *
-     * @since version 3.16.0
-     */
-    prepareSupportDefaultBehavior?: PrepareSupportDefaultBehavior;
+  /**
+   * Client supports the default behavior result
+   * (`{ defaultBehavior: boolean }`).
+   *
+   * The value indicates the default behavior used by the
+   * client.
+   *
+   * @since version 3.16.0
+   */
+  prepareSupportDefaultBehavior?: PrepareSupportDefaultBehavior;
 
-    /**
-     * Whether th client honors the change annotations in
-     * text edits and resource operations returned via the
-     * rename request's workspace edit by for example presenting
-     * the workspace edit in the user interface and asking
-     * for confirmation.
-     *
-     * @since 3.16.0
-     */
-    honorsChangeAnnotations?: boolean;
+  /**
+   * Whether th client honors the change annotations in
+   * text edits and resource operations returned via the
+   * rename request's workspace edit by for example presenting
+   * the workspace edit in the user interface and asking
+   * for confirmation.
+   *
+   * @since 3.16.0
+   */
+  honorsChangeAnnotations?: boolean;
 }
 
 export interface PublishDiagnosticsClientCapabilities {
-    /**
-     * Whether the clients accepts diagnostics with related information.
-     */
-    relatedInformation?: boolean;
+  /**
+   * Whether the clients accepts diagnostics with related information.
+   */
+  relatedInformation?: boolean;
 
+  /**
+   * Client supports the tag property to provide meta data about a diagnostic.
+   * Clients supporting tags have to handle unknown tags gracefully.
+   *
+   * @since 3.15.0
+   */
+  tagSupport?: {
     /**
-     * Client supports the tag property to provide meta data about a diagnostic.
-     * Clients supporting tags have to handle unknown tags gracefully.
-     *
-     * @since 3.15.0
+     * The tags supported by the client.
      */
-    tagSupport?: {
-        /**
-         * The tags supported by the client.
-         */
-        valueSet: DiagnosticTag[];
-    };
+    valueSet: DiagnosticTag[];
+  };
 
-    /**
-     * Whether the client interprets the version property of the
-     * `textDocument/publishDiagnostics` notification's parameter.
-     *
-     * @since 3.15.0
-     */
-    versionSupport?: boolean;
+  /**
+   * Whether the client interprets the version property of the
+   * `textDocument/publishDiagnostics` notification's parameter.
+   *
+   * @since 3.15.0
+   */
+  versionSupport?: boolean;
 
-    /**
-     * Client supports a codeDescription property
-     *
-     * @since 3.16.0
-     */
-    codeDescriptionSupport?: boolean;
+  /**
+   * Client supports a codeDescription property
+   *
+   * @since 3.16.0
+   */
+  codeDescriptionSupport?: boolean;
 
-    /**
-     * Whether code action supports the `data` property which is
-     * preserved between a `textDocument/publishDiagnostics` and
-     * `textDocument/codeAction` request.
-     *
-     * @since 3.16.0
-     */
-    dataSupport?: boolean;
+  /**
+   * Whether code action supports the `data` property which is
+   * preserved between a `textDocument/publishDiagnostics` and
+   * `textDocument/codeAction` request.
+   *
+   * @since 3.16.0
+   */
+  dataSupport?: boolean;
 }
 
 export type DiagnosticTag = 1 | 2;
 
 export interface FoldingRangeClientCapabilities {
-    /**
-     * Whether implementation supports dynamic registration for folding range
-     * providers. If this is set to `true` the client supports the new
-     * `FoldingRangeRegistrationOptions` return value for the corresponding
-     * server capability as well.
-     */
-    dynamicRegistration?: boolean;
-    /**
-     * The maximum number of folding ranges that the client prefers to receive
-     * per document. The value serves as a hint, servers are free to follow the
-     * limit.
-     */
-    rangeLimit?: uinteger;
-    /**
-     * If set, the client signals that it only supports folding complete lines.
-     * If set, client will ignore specified `startCharacter` and `endCharacter`
-     * properties in a FoldingRange.
-     */
-    lineFoldingOnly?: boolean;
+  /**
+   * Whether implementation supports dynamic registration for folding range
+   * providers. If this is set to `true` the client supports the new
+   * `FoldingRangeRegistrationOptions` return value for the corresponding
+   * server capability as well.
+   */
+  dynamicRegistration?: boolean;
+  /**
+   * The maximum number of folding ranges that the client prefers to receive
+   * per document. The value serves as a hint, servers are free to follow the
+   * limit.
+   */
+  rangeLimit?: uinteger;
+  /**
+   * If set, the client signals that it only supports folding complete lines.
+   * If set, client will ignore specified `startCharacter` and `endCharacter`
+   * properties in a FoldingRange.
+   */
+  lineFoldingOnly?: boolean;
 }
 
 export interface SelectionRangeClientCapabilities {
-    /**
-     * Whether implementation supports dynamic registration for selection range
-     * providers. If this is set to `true` the client supports the new
-     * `SelectionRangeRegistrationOptions` return value for the corresponding
-     * server capability as well.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether implementation supports dynamic registration for selection range
+   * providers. If this is set to `true` the client supports the new
+   * `SelectionRangeRegistrationOptions` return value for the corresponding
+   * server capability as well.
+   */
+  dynamicRegistration?: boolean;
 }
 
 export interface LinkedEditingRangeClientCapabilities {
-    /**
-     * Whether implementation supports dynamic registration.
-     * If this is set to `true` the client supports the new
-     * `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-     * return value for the corresponding server capability as well.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether implementation supports dynamic registration.
+   * If this is set to `true` the client supports the new
+   * `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
+   * return value for the corresponding server capability as well.
+   */
+  dynamicRegistration?: boolean;
 }
 
 interface CallHierarchyClientCapabilities {
-    /**
-     * Whether implementation supports dynamic registration. If this is set to
-     * `true` the client supports the new `(TextDocumentRegistrationOptions &
-     * StaticRegistrationOptions)` return value for the corresponding server
-     * capability as well.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether implementation supports dynamic registration. If this is set to
+   * `true` the client supports the new `(TextDocumentRegistrationOptions &
+   * StaticRegistrationOptions)` return value for the corresponding server
+   * capability as well.
+   */
+  dynamicRegistration?: boolean;
 }
 
 interface SemanticTokensClientCapabilities {
+  /**
+   * Whether implementation supports dynamic registration. If this is set to
+   * `true` the client supports the new `(TextDocumentRegistrationOptions &
+   * StaticRegistrationOptions)` return value for the corresponding server
+   * capability as well.
+   */
+  dynamicRegistration?: boolean;
+
+  /**
+   * Which requests the client supports and might send to the server
+   * depending on the server's capability. Please note that clients might not
+   * show semantic tokens or degrade some of the user experience if a range
+   * or full request is advertised by the client but not provided by the
+   * server. If for example the client capability `requests.full` and
+   * `request.range` are both set to true but the server only provides a
+   * range provider the client might not render a minimap correctly or might
+   * even decide to not show any semantic tokens at all.
+   */
+  requests: {
     /**
-     * Whether implementation supports dynamic registration. If this is set to
-     * `true` the client supports the new `(TextDocumentRegistrationOptions &
-     * StaticRegistrationOptions)` return value for the corresponding server
-     * capability as well.
+     * The client will send the `textDocument/semanticTokens/range` request
+     * if the server provides a corresponding handler.
      */
-    dynamicRegistration?: boolean;
+    range?: boolean | object;
 
     /**
-     * Which requests the client supports and might send to the server
-     * depending on the server's capability. Please note that clients might not
-     * show semantic tokens or degrade some of the user experience if a range
-     * or full request is advertised by the client but not provided by the
-     * server. If for example the client capability `requests.full` and
-     * `request.range` are both set to true but the server only provides a
-     * range provider the client might not render a minimap correctly or might
-     * even decide to not show any semantic tokens at all.
+     * The client will send the `textDocument/semanticTokens/full` request
+     * if the server provides a corresponding handler.
      */
-    requests: {
-        /**
-         * The client will send the `textDocument/semanticTokens/range` request
-         * if the server provides a corresponding handler.
-         */
-        range?: boolean | object;
-
-        /**
-         * The client will send the `textDocument/semanticTokens/full` request
-         * if the server provides a corresponding handler.
-         */
-        full?: boolean | {
-            /**
-             * The client will send the `textDocument/semanticTokens/full/delta`
-             * request if the server provides a corresponding handler.
-             */
-            delta?: boolean;
-        };
+    full?: boolean | {
+      /**
+       * The client will send the `textDocument/semanticTokens/full/delta`
+       * request if the server provides a corresponding handler.
+       */
+      delta?: boolean;
     };
+  };
 
-    /**
-     * The token types that the client supports.
-     */
-    tokenTypes: string[];
+  /**
+   * The token types that the client supports.
+   */
+  tokenTypes: string[];
 
-    /**
-     * The token modifiers that the client supports.
-     */
-    tokenModifiers: string[];
+  /**
+   * The token modifiers that the client supports.
+   */
+  tokenModifiers: string[];
 
-    /**
-     * The formats the clients supports.
-     */
-    formats: TokenFormat[];
+  /**
+   * The formats the clients supports.
+   */
+  formats: TokenFormat[];
 
-    /**
-     * Whether the client supports tokens that can overlap each other.
-     */
-    overlappingTokenSupport?: boolean;
+  /**
+   * Whether the client supports tokens that can overlap each other.
+   */
+  overlappingTokenSupport?: boolean;
 
-    /**
-     * Whether the client supports tokens that can span multiple lines.
-     */
-    multilineTokenSupport?: boolean;
+  /**
+   * Whether the client supports tokens that can span multiple lines.
+   */
+  multilineTokenSupport?: boolean;
 }
 
 export type TokenFormat = 'relative';
 
 interface MonikerClientCapabilities {
-    /**
-     * Whether implementation supports dynamic registration. If this is set to
-     * `true` the client supports the new `(TextDocumentRegistrationOptions &
-     * StaticRegistrationOptions)` return value for the corresponding server
-     * capability as well.
-     */
-    dynamicRegistration?: boolean;
+  /**
+   * Whether implementation supports dynamic registration. If this is set to
+   * `true` the client supports the new `(TextDocumentRegistrationOptions &
+   * StaticRegistrationOptions)` return value for the corresponding server
+   * capability as well.
+   */
+  dynamicRegistration?: boolean;
 }
 
 /**
  * Show message request client capabilities
  */
 export interface ShowMessageRequestClientCapabilities {
+  /**
+   * Capabilities specific to the `MessageActionItem` type.
+   */
+  messageActionItem?: {
     /**
-     * Capabilities specific to the `MessageActionItem` type.
+     * Whether the client supports additional attributes which
+     * are preserved and sent back to the server in the
+     * request's response.
      */
-    messageActionItem?: {
-        /**
-         * Whether the client supports additional attributes which
-         * are preserved and sent back to the server in the
-         * request's response.
-         */
-        additionalPropertiesSupport?: boolean;
-    };
+    additionalPropertiesSupport?: boolean;
+  };
 }
 
 /**
@@ -1806,26 +1903,26 @@ export interface ShowMessageRequestClientCapabilities {
  * @since 3.16.0
  */
 export interface ShowDocumentClientCapabilities {
-    /**
-     * The client has support for the show document
-     * request.
-     */
-    support: boolean;
+  /**
+   * The client has support for the show document
+   * request.
+   */
+  support: boolean;
 }
 
 /**
  * Client capabilities specific to regular expressions.
  */
 export interface RegularExpressionsClientCapabilities {
-    /**
-     * The engine's name.
-     */
-    engine: string;
+  /**
+   * The engine's name.
+   */
+  engine: string;
 
-    /**
-     * The engine's version.
-     */
-    version?: string;
+  /**
+   * The engine's version.
+   */
+  version?: string;
 }
 
 /**
@@ -1834,287 +1931,325 @@ export interface RegularExpressionsClientCapabilities {
  * @since 3.16.0
  */
 export interface MarkdownClientCapabilities {
-    /**
-     * The name of the parser.
-     */
-    parser: string;
+  /**
+   * The name of the parser.
+   */
+  parser: string;
 
-    /**
-     * The version of the parser.
-     */
-    version?: string;
+  /**
+   * The version of the parser.
+   */
+  version?: string;
 }
 
+/**
+ * A type indicating how positions are encoded,
+ * specifically what column offsets mean.
+ *
+ * @since 3.17.0
+ */
+export type PositionEncodingKind = string;
+
+// /**
+//  * A set of predefined position encoding kinds.
+//  *
+//  * @since 3.17.0
+//  */
+// export enum PositionEncodingKind {
+//
+//   /**
+//    * Character offsets count UTF-8 code units (e.g bytes).
+//    */
+//   UTF8 = 'utf-8',
+//
+//   /**
+//    * Character offsets count UTF-16 code units.
+//    *
+//    * This is the default and must always be supported
+//    * by servers
+//    */
+//   UTF16 = 'utf-16',
+//
+//   /**
+//    * Character offsets count UTF-32 code units.
+//    *
+//    * Implementation note: these are the same as Unicode code points,
+//    * so this `PositionEncodingKind` may also be used for an
+//    * encoding-agnostic representation of character offsets.
+//    */
+//   UTF32 = 'utf-32',
+// }
+
 export interface InitializeResult {
+  /**
+   * The capabilities the language server provides.
+   */
+  capabilities: ServerCapabilities;
+
+  /**
+   * Information about the server.
+   *
+   * @since 3.15.0
+   */
+  serverInfo?: {
     /**
-     * The capabilities the language server provides.
+     * The name of the server as defined by the server.
      */
-    capabilities: ServerCapabilities;
+    name: string;
 
     /**
-     * Information about the server.
-     *
-     * @since 3.15.0
+     * The server's version as defined by the server.
      */
-    serverInfo?: {
-        /**
-         * The name of the server as defined by the server.
-         */
-        name: string;
-
-        /**
-         * The server's version as defined by the server.
-         */
-        version?: string;
-    };
+    version?: string;
+  };
 }
 
 interface ServerCapabilities {
-    /**
-     * Defines how text documents are synced. Is either a detailed structure
-     * defining each notification or for backwards compatibility the
-     * TextDocumentSyncKind number. If omitted it defaults to
-     * `TextDocumentSyncKind.None`.
-     */
-    textDocumentSync?: TextDocumentSyncOptions | TextDocumentSyncKind;
+  /**
+   * Defines how text documents are synced. Is either a detailed structure
+   * defining each notification or for backwards compatibility the
+   * TextDocumentSyncKind number. If omitted it defaults to
+   * `TextDocumentSyncKind.None`.
+   */
+  textDocumentSync?: TextDocumentSyncOptions | TextDocumentSyncKind;
 
-    /**
-     * The server provides completion support.
-     */
-    completionProvider?: CompletionOptions;
+  /**
+   * The server provides completion support.
+   */
+  completionProvider?: CompletionOptions;
 
-    /**
-     * The server provides hover support.
-     */
-    hoverProvider?: boolean | HoverOptions;
+  /**
+   * The server provides hover support.
+   */
+  hoverProvider?: boolean | HoverOptions;
 
-    /**
-     * The server provides signature help support.
-     */
-    signatureHelpProvider?: SignatureHelpOptions;
+  /**
+   * The server provides signature help support.
+   */
+  signatureHelpProvider?: SignatureHelpOptions;
 
-    /**
-     * The server provides go to declaration support.
-     *
-     * @since 3.14.0
-     */
-    declarationProvider?: boolean | DeclarationOptions
-    | DeclarationRegistrationOptions;
+  /**
+   * The server provides go to declaration support.
+   *
+   * @since 3.14.0
+   */
+  declarationProvider?: boolean | DeclarationOptions
+  | DeclarationRegistrationOptions;
 
-    /**
-     * The server provides goto definition support.
-     */
-    definitionProvider?: boolean | DefinitionOptions;
+  /**
+   * The server provides goto definition support.
+   */
+  definitionProvider?: boolean | DefinitionOptions;
 
+  /**
+   * The server provides goto type definition support.
+   *
+   * @since 3.6.0
+   */
+  typeDefinitionProvider?: boolean | TypeDefinitionOptions
+  | TypeDefinitionRegistrationOptions;
+
+  /**
+   * The server provides goto implementation support.
+   *
+   * @since 3.6.0
+   */
+  implementationProvider?: boolean | ImplementationOptions
+  | ImplementationRegistrationOptions;
+
+  /**
+   * The server provides find references support.
+   */
+  referencesProvider?: boolean | ReferenceOptions;
+
+  /**
+   * The server provides document highlight support.
+   */
+  documentHighlightProvider?: boolean | DocumentHighlightOptions;
+
+  /**
+   * The server provides document symbol support.
+   */
+  documentSymbolProvider?: boolean | DocumentSymbolOptions;
+
+  /**
+   * The server provides code actions. The `CodeActionOptions` return type is
+   * only valid if the client signals code action literal support via the
+   * property `textDocument.codeAction.codeActionLiteralSupport`.
+   */
+  codeActionProvider?: boolean | CodeActionOptions;
+
+  /**
+   * The server provides code lens.
+   */
+  codeLensProvider?: CodeLensOptions;
+
+  /**
+   * The server provides document link support.
+   */
+  documentLinkProvider?: DocumentLinkOptions;
+
+  /**
+   * The server provides color provider support.
+   *
+   * @since 3.6.0
+   */
+  colorProvider?: boolean | DocumentColorOptions
+  | DocumentColorRegistrationOptions;
+
+  /**
+   * The server provides document formatting.
+   */
+  documentFormattingProvider?: boolean | DocumentFormattingOptions;
+
+  /**
+   * The server provides document range formatting.
+   */
+  documentRangeFormattingProvider?: boolean | DocumentRangeFormattingOptions;
+
+  /**
+   * The server provides document formatting on typing.
+   */
+  documentOnTypeFormattingProvider?: DocumentOnTypeFormattingOptions;
+
+  /**
+   * The server provides rename support. RenameOptions may only be
+   * specified if the client states that it supports
+   * `prepareSupport` in its initial `initialize` request.
+   */
+  renameProvider?: boolean | RenameOptions;
+
+  /**
+   * The server provides folding provider support.
+   *
+   * @since 3.10.0
+   */
+  foldingRangeProvider?: boolean | FoldingRangeOptions
+  | FoldingRangeRegistrationOptions;
+
+  /**
+   * The server provides execute command support.
+   */
+  executeCommandProvider?: ExecuteCommandOptions;
+
+  /**
+   * The server provides selection range support.
+   *
+   * @since 3.15.0
+   */
+  selectionRangeProvider?: boolean | SelectionRangeOptions
+  | SelectionRangeRegistrationOptions;
+
+  /**
+   * The server provides linked editing range support.
+   *
+   * @since 3.16.0
+   */
+  linkedEditingRangeProvider?: boolean | LinkedEditingRangeOptions
+  | LinkedEditingRangeRegistrationOptions;
+
+  /**
+   * The server provides call hierarchy support.
+   *
+   * @since 3.16.0
+   */
+  callHierarchyProvider?: boolean | CallHierarchyOptions
+  | CallHierarchyRegistrationOptions;
+
+  /**
+   * The server provides semantic tokens support.
+   *
+   * @since 3.16.0
+   */
+  semanticTokensProvider?: SemanticTokensOptions
+  | SemanticTokensRegistrationOptions;
+
+  /**
+   * Whether server provides moniker support.
+   *
+   * @since 3.16.0
+   */
+  monikerProvider?: boolean | MonikerOptions | MonikerRegistrationOptions;
+
+  /**
+   * The server provides workspace symbol support.
+   */
+  workspaceSymbolProvider?: boolean | WorkspaceSymbolOptions;
+
+  /**
+   * Workspace specific server capabilities
+   */
+  workspace?: {
     /**
-     * The server provides goto type definition support.
+     * The server supports workspace folder.
      *
      * @since 3.6.0
      */
-    typeDefinitionProvider?: boolean | TypeDefinitionOptions
-    | TypeDefinitionRegistrationOptions;
+    workspaceFolders?: WorkspaceFoldersServerCapabilities;
 
     /**
-     * The server provides goto implementation support.
-     *
-     * @since 3.6.0
-     */
-    implementationProvider?: boolean | ImplementationOptions
-    | ImplementationRegistrationOptions;
-
-    /**
-     * The server provides find references support.
-     */
-    referencesProvider?: boolean | ReferenceOptions;
-
-    /**
-     * The server provides document highlight support.
-     */
-    documentHighlightProvider?: boolean | DocumentHighlightOptions;
-
-    /**
-     * The server provides document symbol support.
-     */
-    documentSymbolProvider?: boolean | DocumentSymbolOptions;
-
-    /**
-     * The server provides code actions. The `CodeActionOptions` return type is
-     * only valid if the client signals code action literal support via the
-     * property `textDocument.codeAction.codeActionLiteralSupport`.
-     */
-    codeActionProvider?: boolean | CodeActionOptions;
-
-    /**
-     * The server provides code lens.
-     */
-    codeLensProvider?: CodeLensOptions;
-
-    /**
-     * The server provides document link support.
-     */
-    documentLinkProvider?: DocumentLinkOptions;
-
-    /**
-     * The server provides color provider support.
-     *
-     * @since 3.6.0
-     */
-    colorProvider?: boolean | DocumentColorOptions
-    | DocumentColorRegistrationOptions;
-
-    /**
-     * The server provides document formatting.
-     */
-    documentFormattingProvider?: boolean | DocumentFormattingOptions;
-
-    /**
-     * The server provides document range formatting.
-     */
-    documentRangeFormattingProvider?: boolean | DocumentRangeFormattingOptions;
-
-    /**
-     * The server provides document formatting on typing.
-     */
-    documentOnTypeFormattingProvider?: DocumentOnTypeFormattingOptions;
-
-    /**
-     * The server provides rename support. RenameOptions may only be
-     * specified if the client states that it supports
-     * `prepareSupport` in its initial `initialize` request.
-     */
-    renameProvider?: boolean | RenameOptions;
-
-    /**
-     * The server provides folding provider support.
-     *
-     * @since 3.10.0
-     */
-    foldingRangeProvider?: boolean | FoldingRangeOptions
-    | FoldingRangeRegistrationOptions;
-
-    /**
-     * The server provides execute command support.
-     */
-    executeCommandProvider?: ExecuteCommandOptions;
-
-    /**
-     * The server provides selection range support.
-     *
-     * @since 3.15.0
-     */
-    selectionRangeProvider?: boolean | SelectionRangeOptions
-    | SelectionRangeRegistrationOptions;
-
-    /**
-     * The server provides linked editing range support.
+     * The server is interested in file notifications/requests.
      *
      * @since 3.16.0
      */
-    linkedEditingRangeProvider?: boolean | LinkedEditingRangeOptions
-    | LinkedEditingRangeRegistrationOptions;
+    fileOperations?: {
+      /**
+       * The server is interested in receiving didCreateFiles
+       * notifications.
+       */
+      didCreate?: FileOperationRegistrationOptions;
 
-    /**
-     * The server provides call hierarchy support.
-     *
-     * @since 3.16.0
-     */
-    callHierarchyProvider?: boolean | CallHierarchyOptions
-    | CallHierarchyRegistrationOptions;
+      /**
+       * The server is interested in receiving willCreateFiles requests.
+       */
+      willCreate?: FileOperationRegistrationOptions;
 
-    /**
-     * The server provides semantic tokens support.
-     *
-     * @since 3.16.0
-     */
-    semanticTokensProvider?: SemanticTokensOptions
-    | SemanticTokensRegistrationOptions;
+      /**
+       * The server is interested in receiving didRenameFiles
+       * notifications.
+       */
+      didRename?: FileOperationRegistrationOptions;
 
-    /**
-     * Whether server provides moniker support.
-     *
-     * @since 3.16.0
-     */
-    monikerProvider?: boolean | MonikerOptions | MonikerRegistrationOptions;
+      /**
+       * The server is interested in receiving willRenameFiles requests.
+       */
+      willRename?: FileOperationRegistrationOptions;
 
-    /**
-     * The server provides workspace symbol support.
-     */
-    workspaceSymbolProvider?: boolean | WorkspaceSymbolOptions;
+      /**
+       * The server is interested in receiving didDeleteFiles file
+       * notifications.
+       */
+      didDelete?: FileOperationRegistrationOptions;
 
-    /**
-     * Workspace specific server capabilities
-     */
-    workspace?: {
-        /**
-         * The server supports workspace folder.
-         *
-         * @since 3.6.0
-         */
-        workspaceFolders?: WorkspaceFoldersServerCapabilities;
-
-        /**
-         * The server is interested in file notifications/requests.
-         *
-         * @since 3.16.0
-         */
-        fileOperations?: {
-            /**
-             * The server is interested in receiving didCreateFiles
-             * notifications.
-             */
-            didCreate?: FileOperationRegistrationOptions;
-
-            /**
-             * The server is interested in receiving willCreateFiles requests.
-             */
-            willCreate?: FileOperationRegistrationOptions;
-
-            /**
-             * The server is interested in receiving didRenameFiles
-             * notifications.
-             */
-            didRename?: FileOperationRegistrationOptions;
-
-            /**
-             * The server is interested in receiving willRenameFiles requests.
-             */
-            willRename?: FileOperationRegistrationOptions;
-
-            /**
-             * The server is interested in receiving didDeleteFiles file
-             * notifications.
-             */
-            didDelete?: FileOperationRegistrationOptions;
-
-            /**
-             * The server is interested in receiving willDeleteFiles file
-             * requests.
-             */
-            willDelete?: FileOperationRegistrationOptions;
-        };
+      /**
+       * The server is interested in receiving willDeleteFiles file
+       * requests.
+       */
+      willDelete?: FileOperationRegistrationOptions;
     };
+  };
 
-    /**
-     * Experimental server capabilities.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    experimental?: any;
+  /**
+   * Experimental server capabilities.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  experimental?: any;
 }
 
 export interface TextDocumentSyncOptions {
-    /**
-     * Open and close notifications are sent to the server. If omitted open
-     * close notification should not be sent.
-     */
-    openClose?: boolean;
+  /**
+   * Open and close notifications are sent to the server. If omitted open
+   * close notification should not be sent.
+   */
+  openClose?: boolean;
 
-    /**
-     * Change notifications are sent to the server. See
-     * TextDocumentSyncKind.None, TextDocumentSyncKind.Full and
-     * TextDocumentSyncKind.Incremental. If omitted it defaults to
-     * TextDocumentSyncKind.None.
-     */
-    change?: TextDocumentSyncKind;
+  /**
+   * Change notifications are sent to the server. See
+   * TextDocumentSyncKind.None, TextDocumentSyncKind.Full and
+   * TextDocumentSyncKind.Incremental. If omitted it defaults to
+   * TextDocumentSyncKind.None.
+   */
+  change?: TextDocumentSyncKind;
 }
 
 /**
@@ -2122,167 +2257,167 @@ export interface TextDocumentSyncOptions {
  * server.
  */
 export enum TextDocumentSyncKind {
-    /**
-     * Documents should not be synced at all.
-     */
-    None = 0,
+  /**
+   * Documents should not be synced at all.
+   */
+  None = 0,
 
-    /**
-     * Documents are synced by always sending the full content
-     * of the document.
-     */
-    Full = 1,
+  /**
+   * Documents are synced by always sending the full content
+   * of the document.
+   */
+  Full = 1,
 
-    /**
-     * Documents are synced by sending the full content on open.
-     * After that only incremental updates to the document are
-     * send.
-     */
-    Incremental = 2
+  /**
+   * Documents are synced by sending the full content on open.
+   * After that only incremental updates to the document are
+   * send.
+   */
+  Incremental = 2
 }
 
 /**
  * Completion options.
  */
 export interface CompletionOptions extends WorkDoneProgressOptions {
-    /**
-     * Most tools trigger completion request automatically without explicitly
-     * requesting it using a keyboard shortcut (e.g. Ctrl+Space). Typically they
-     * do so when the user starts to type an identifier. For example if the user
-     * types `c` in a JavaScript file code complete will automatically pop up
-     * present `console` besides others as a completion item. Characters that
-     * make up identifiers don't need to be listed here.
-     *
-     * If code complete should automatically be trigger on characters not being
-     * valid inside an identifier (for example `.` in JavaScript) list them in
-     * `triggerCharacters`.
-     */
-    triggerCharacters?: string[];
+  /**
+   * Most tools trigger completion request automatically without explicitly
+   * requesting it using a keyboard shortcut (e.g. Ctrl+Space). Typically they
+   * do so when the user starts to type an identifier. For example if the user
+   * types `c` in a JavaScript file code complete will automatically pop up
+   * present `console` besides others as a completion item. Characters that
+   * make up identifiers don't need to be listed here.
+   *
+   * If code complete should automatically be trigger on characters not being
+   * valid inside an identifier (for example `.` in JavaScript) list them in
+   * `triggerCharacters`.
+   */
+  triggerCharacters?: string[];
 
-    /**
-     * The list of all possible characters that commit a completion. This field
-     * can be used if clients don't support individual commit characters per
-     * completion item. See client capability
-     * `completion.completionItem.commitCharactersSupport`.
-     *
-     * If a server provides both `allCommitCharacters` and commit characters on
-     * an individual completion item the ones on the completion item win.
-     *
-     * @since 3.2.0
-     */
-    allCommitCharacters?: string[];
+  /**
+   * The list of all possible characters that commit a completion. This field
+   * can be used if clients don't support individual commit characters per
+   * completion item. See client capability
+   * `completion.completionItem.commitCharactersSupport`.
+   *
+   * If a server provides both `allCommitCharacters` and commit characters on
+   * an individual completion item the ones on the completion item win.
+   *
+   * @since 3.2.0
+   */
+  allCommitCharacters?: string[];
 
-    /**
-     * The server provides support to resolve additional
-     * information for a completion item.
-     */
-    resolveProvider?: boolean;
+  /**
+   * The server provides support to resolve additional
+   * information for a completion item.
+   */
+  resolveProvider?: boolean;
 
+  /**
+   * The server supports the following `CompletionItem` specific
+   * capabilities.
+   *
+   * @since 3.17.0 - proposed state
+   */
+  completionItem?: {
     /**
-     * The server supports the following `CompletionItem` specific
-     * capabilities.
+     * The server has support for completion item label
+     * details (see also `CompletionItemLabelDetails`) when receiving
+     * a completion item in a resolve call.
      *
      * @since 3.17.0 - proposed state
      */
-    completionItem?: {
-        /**
-         * The server has support for completion item label
-         * details (see also `CompletionItemLabelDetails`) when receiving
-         * a completion item in a resolve call.
-         *
-         * @since 3.17.0 - proposed state
-         */
-        labelDetailsSupport?: boolean;
-    }
+    labelDetailsSupport?: boolean;
+  }
 }
 
 export interface WorkDoneProgressOptions {
-    workDoneProgress?: boolean;
+  workDoneProgress?: boolean;
 }
 
 export type HoverOptions = WorkDoneProgressOptions
 
 export interface SignatureHelpOptions extends WorkDoneProgressOptions {
-    /**
-     * The characters that trigger signature help
-     * automatically.
-     */
-    triggerCharacters?: string[];
+  /**
+   * The characters that trigger signature help
+   * automatically.
+   */
+  triggerCharacters?: string[];
 
-    /**
-     * List of characters that re-trigger signature help.
-     *
-     * These trigger characters are only active when signature help is already
-     * showing. All trigger characters are also counted as re-trigger
-     * characters.
-     *
-     * @since 3.15.0
-     */
-    retriggerCharacters?: string[];
+  /**
+   * List of characters that re-trigger signature help.
+   *
+   * These trigger characters are only active when signature help is already
+   * showing. All trigger characters are also counted as re-trigger
+   * characters.
+   *
+   * @since 3.15.0
+   */
+  retriggerCharacters?: string[];
 }
 
 export type DeclarationOptions = WorkDoneProgressOptions
 
 export interface DeclarationRegistrationOptions extends DeclarationOptions,
-    TextDocumentRegistrationOptions, StaticRegistrationOptions {
+  TextDocumentRegistrationOptions, StaticRegistrationOptions {
 }
 
 /**
  * General text document registration options.
  */
 export interface TextDocumentRegistrationOptions {
-    /**
-     * A document selector to identify the scope of the registration. If set to
-     * null the document selector provided on the client side will be used.
-     */
-    documentSelector: DocumentSelector | null;
+  /**
+   * A document selector to identify the scope of the registration. If set to
+   * null the document selector provided on the client side will be used.
+   */
+  documentSelector: DocumentSelector | null;
 }
 
 export type DocumentSelector = DocumentFilter[];
 
 export interface DocumentFilter {
-    /**
-     * A language id, like `typescript`.
-     */
-    language?: string;
+  /**
+   * A language id, like `typescript`.
+   */
+  language?: string;
 
-    /**
-     * A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
-     */
-    scheme?: string;
+  /**
+   * A Uri [scheme](#Uri.scheme), like `file` or `untitled`.
+   */
+  scheme?: string;
 
-    /**
-     * A glob pattern, like `*.{ts,js}`.
-     *
-     * Glob patterns can have the following syntax:
-     * - `*` to match one or more characters in a path segment
-     * - `?` to match on one character in a path segment
-     * - `**` to match any number of path segments, including none
-     * - `{}` to group sub patterns into an OR expression. (e.g. `** /*.{ts,js}`
-     *   matches all TypeScript and JavaScript files)
-     * - `[]` to declare a range of characters to match in a path segment
-     *   (e.g., `example.[0-9]` to match on `example.0`, `example.1`, …)
-     * - `[!...]` to negate a range of characters to match in a path segment
-     *   (e.g., `example.[!0-9]` to match on `example.a`, `example.b`, but
-     *   not `example.0`)
-     */
-    pattern?: string;
+  /**
+   * A glob pattern, like `*.{ts,js}`.
+   *
+   * Glob patterns can have the following syntax:
+   * - `*` to match one or more characters in a path segment
+   * - `?` to match on one character in a path segment
+   * - `**` to match any number of path segments, including none
+   * - `{}` to group sub patterns into an OR expression. (e.g. `** /*.{ts,js}`
+   *   matches all TypeScript and JavaScript files)
+   * - `[]` to declare a range of characters to match in a path segment
+   *   (e.g., `example.[0-9]` to match on `example.0`, `example.1`, …)
+   * - `[!...]` to negate a range of characters to match in a path segment
+   *   (e.g., `example.[!0-9]` to match on `example.a`, `example.b`, but
+   *   not `example.0`)
+   */
+  pattern?: string;
 }
 
 /**
  * Static registration options to be returned in the initialize request.
  */
 export interface StaticRegistrationOptions {
-    /**
-     * The id used to register the request. The id can be used to deregister
-     * the request again. See also Registration#id.
-     */
-    id?: string;
+  /**
+   * The id used to register the request. The id can be used to deregister
+   * the request again. See also Registration#id.
+   */
+  id?: string;
 }
 
 export interface TypeDefinitionRegistrationOptions extends
-    TextDocumentRegistrationOptions, TypeDefinitionOptions,
-    StaticRegistrationOptions {
+  TextDocumentRegistrationOptions, TypeDefinitionOptions,
+  StaticRegistrationOptions {
 }
 
 export type DefinitionOptions = WorkDoneProgressOptions
@@ -2292,8 +2427,8 @@ export type TypeDefinitionOptions = WorkDoneProgressOptions
 export type ImplementationOptions = WorkDoneProgressOptions
 
 export interface ImplementationRegistrationOptions extends
-    TextDocumentRegistrationOptions, ImplementationOptions,
-    StaticRegistrationOptions {
+  TextDocumentRegistrationOptions, ImplementationOptions,
+  StaticRegistrationOptions {
 }
 
 export type ReferenceOptions = WorkDoneProgressOptions
@@ -2301,52 +2436,52 @@ export type ReferenceOptions = WorkDoneProgressOptions
 export type DocumentHighlightOptions = WorkDoneProgressOptions
 
 export interface DocumentSymbolOptions extends WorkDoneProgressOptions {
-    /**
-     * A human-readable string that is shown when multiple outlines trees
-     * are shown for the same document.
-     *
-     * @since 3.16.0
-     */
-    label?: string;
+  /**
+   * A human-readable string that is shown when multiple outlines trees
+   * are shown for the same document.
+   *
+   * @since 3.16.0
+   */
+  label?: string;
 }
 
 export interface CodeActionOptions extends WorkDoneProgressOptions {
-    /**
-     * CodeActionKinds that this server may return.
-     *
-     * The list of kinds may be generic, such as `CodeActionKind.Refactor`,
-     * or the server may list out every specific kind they provide.
-     */
-    codeActionKinds?: CodeActionKind[];
+  /**
+   * CodeActionKinds that this server may return.
+   *
+   * The list of kinds may be generic, such as `CodeActionKind.Refactor`,
+   * or the server may list out every specific kind they provide.
+   */
+  codeActionKinds?: CodeActionKind[];
 
-    /**
-     * The server provides support to resolve additional
-     * information for a code action.
-     *
-     * @since 3.16.0
-     */
-    resolveProvider?: boolean;
+  /**
+   * The server provides support to resolve additional
+   * information for a code action.
+   *
+   * @since 3.16.0
+   */
+  resolveProvider?: boolean;
 }
 
 export interface CodeLensOptions extends WorkDoneProgressOptions {
-    /**
-     * Code lens has a resolve provider as well.
-     */
-    resolveProvider?: boolean;
+  /**
+   * Code lens has a resolve provider as well.
+   */
+  resolveProvider?: boolean;
 }
 
 export interface DocumentLinkOptions extends WorkDoneProgressOptions {
-    /**
-     * Document links have a resolve provider as well.
-     */
-    resolveProvider?: boolean;
+  /**
+   * Document links have a resolve provider as well.
+   */
+  resolveProvider?: boolean;
 }
 
 export type DocumentColorOptions = WorkDoneProgressOptions
 
 export interface DocumentColorRegistrationOptions extends
-    TextDocumentRegistrationOptions, StaticRegistrationOptions,
-    DocumentColorOptions {
+  TextDocumentRegistrationOptions, StaticRegistrationOptions,
+  DocumentColorOptions {
 }
 
 export type DocumentFormattingOptions = WorkDoneProgressOptions
@@ -2354,123 +2489,123 @@ export type DocumentFormattingOptions = WorkDoneProgressOptions
 export type DocumentRangeFormattingOptions = WorkDoneProgressOptions
 
 export interface DocumentOnTypeFormattingOptions {
-    /**
-     * A character on which formatting should be triggered, like `}`.
-     */
-    firstTriggerCharacter: string;
+  /**
+   * A character on which formatting should be triggered, like `}`.
+   */
+  firstTriggerCharacter: string;
 
-    /**
-     * More trigger characters.
-     */
-    moreTriggerCharacter?: string[];
+  /**
+   * More trigger characters.
+   */
+  moreTriggerCharacter?: string[];
 }
 
 export interface RenameOptions extends WorkDoneProgressOptions {
-    /**
-     * Renames should be checked and tested before being executed.
-     */
-    prepareProvider?: boolean;
+  /**
+   * Renames should be checked and tested before being executed.
+   */
+  prepareProvider?: boolean;
 }
 
 export type FoldingRangeOptions = WorkDoneProgressOptions
 
 export interface FoldingRangeRegistrationOptions extends
-    TextDocumentRegistrationOptions, FoldingRangeOptions,
-    StaticRegistrationOptions {
+  TextDocumentRegistrationOptions, FoldingRangeOptions,
+  StaticRegistrationOptions {
 }
 
 export interface ExecuteCommandOptions extends WorkDoneProgressOptions {
-    /**
-     * The commands to be executed on the server
-     */
-    commands: string[];
+  /**
+   * The commands to be executed on the server
+   */
+  commands: string[];
 }
 
 export type SelectionRangeOptions = WorkDoneProgressOptions
 
 export interface SelectionRangeRegistrationOptions extends
-    SelectionRangeOptions, TextDocumentRegistrationOptions,
-    StaticRegistrationOptions {
+  SelectionRangeOptions, TextDocumentRegistrationOptions,
+  StaticRegistrationOptions {
 }
 
 export type LinkedEditingRangeOptions = WorkDoneProgressOptions
 
 export interface LinkedEditingRangeRegistrationOptions extends
-    TextDocumentRegistrationOptions, LinkedEditingRangeOptions,
-    StaticRegistrationOptions {
+  TextDocumentRegistrationOptions, LinkedEditingRangeOptions,
+  StaticRegistrationOptions {
 }
 
 export type CallHierarchyOptions = WorkDoneProgressOptions
 
 export interface CallHierarchyRegistrationOptions extends
-    TextDocumentRegistrationOptions, CallHierarchyOptions,
-    StaticRegistrationOptions {
+  TextDocumentRegistrationOptions, CallHierarchyOptions,
+  StaticRegistrationOptions {
 }
 
 export interface SemanticTokensOptions extends WorkDoneProgressOptions {
-    /**
-     * The legend used by the server
-     */
-    legend: SemanticTokensLegend;
+  /**
+   * The legend used by the server
+   */
+  legend: SemanticTokensLegend;
 
-    /**
-     * Server supports providing semantic tokens for a specific range
-     * of a document.
-     */
-    range?: boolean | object;
+  /**
+   * Server supports providing semantic tokens for a specific range
+   * of a document.
+   */
+  range?: boolean | object;
 
+  /**
+   * Server supports providing semantic tokens for a full document.
+   */
+  full?: boolean | {
     /**
-     * Server supports providing semantic tokens for a full document.
+     * The server supports deltas for full documents.
      */
-    full?: boolean | {
-        /**
-         * The server supports deltas for full documents.
-         */
-        delta?: boolean;
-    };
+    delta?: boolean;
+  };
 }
 
 export interface SemanticTokensLegend {
-    /**
-     * The token types a server uses.
-     */
-    tokenTypes: string[];
+  /**
+   * The token types a server uses.
+   */
+  tokenTypes: string[];
 
-    /**
-     * The token modifiers a server uses.
-     */
-    tokenModifiers: string[];
+  /**
+   * The token modifiers a server uses.
+   */
+  tokenModifiers: string[];
 }
 
 export interface SemanticTokensRegistrationOptions extends
-    TextDocumentRegistrationOptions, SemanticTokensOptions,
-    StaticRegistrationOptions {
+  TextDocumentRegistrationOptions, SemanticTokensOptions,
+  StaticRegistrationOptions {
 }
 
 export type MonikerOptions = WorkDoneProgressOptions
 
 export interface MonikerRegistrationOptions extends
-    TextDocumentRegistrationOptions, MonikerOptions {
+  TextDocumentRegistrationOptions, MonikerOptions {
 }
 
 export type WorkspaceSymbolOptions = WorkDoneProgressOptions
 
 export interface WorkspaceFoldersServerCapabilities {
-    /**
-     * The server has support for workspace folders
-     */
-    supported?: boolean;
+  /**
+   * The server has support for workspace folders
+   */
+  supported?: boolean;
 
-    /**
-     * Whether the server wants to receive workspace folder
-     * change notifications.
-     *
-     * If a string is provided, the string is treated as an ID
-     * under which the notification is registered on the client
-     * side. The ID can be used to unregister for these events
-     * using the `client/unregisterCapability` request.
-     */
-    changeNotifications?: string | boolean;
+  /**
+   * Whether the server wants to receive workspace folder
+   * change notifications.
+   *
+   * If a string is provided, the string is treated as an ID
+   * under which the notification is registered on the client
+   * side. The ID can be used to unregister for these events
+   * using the `client/unregisterCapability` request.
+   */
+  changeNotifications?: string | boolean;
 }
 
 /**
@@ -2479,10 +2614,10 @@ export interface WorkspaceFoldersServerCapabilities {
  * @since 3.16.0
  */
 interface FileOperationRegistrationOptions {
-    /**
-     * The actual filters.
-     */
-    filters: FileOperationFilter[];
+  /**
+   * The actual filters.
+   */
+  filters: FileOperationFilter[];
 }
 
 /**
@@ -2493,15 +2628,15 @@ interface FileOperationRegistrationOptions {
  */
 export interface FileOperationFilter {
 
-    /**
-     * A Uri like `file` or `untitled`.
-     */
-    scheme?: string;
+  /**
+   * A Uri like `file` or `untitled`.
+   */
+  scheme?: string;
 
-    /**
-     * The actual file operation pattern.
-     */
-    pattern: FileOperationPattern;
+  /**
+   * The actual file operation pattern.
+   */
+  pattern: FileOperationPattern;
 }
 
 /**
@@ -2511,32 +2646,32 @@ export interface FileOperationFilter {
  * @since 3.16.0
  */
 interface FileOperationPattern {
-    /**
-     * The glob pattern to match. Glob patterns can have the following syntax:
-     * - `*` to match one or more characters in a path segment
-     * - `?` to match on one character in a path segment
-     * - `**` to match any number of path segments, including none
-     * - `{}` to group sub patterns into an OR expression. (e.g. `** /*.{ts,js}`
-     *   matches all TypeScript and JavaScript files)
-     * - `[]` to declare a range of characters to match in a path segment
-     *   (e.g., `example.[0-9]` to match on `example.0`, `example.1`, …)
-     * - `[!...]` to negate a range of characters to match in a path segment
-     *   (e.g., `example.[!0-9]` to match on `example.a`, `example.b`, but
-     *   not `example.0`)
-     */
-    glob: string;
+  /**
+   * The glob pattern to match. Glob patterns can have the following syntax:
+   * - `*` to match one or more characters in a path segment
+   * - `?` to match on one character in a path segment
+   * - `**` to match any number of path segments, including none
+   * - `{}` to group sub patterns into an OR expression. (e.g. `** /*.{ts,js}`
+   *   matches all TypeScript and JavaScript files)
+   * - `[]` to declare a range of characters to match in a path segment
+   *   (e.g., `example.[0-9]` to match on `example.0`, `example.1`, …)
+   * - `[!...]` to negate a range of characters to match in a path segment
+   *   (e.g., `example.[!0-9]` to match on `example.a`, `example.b`, but
+   *   not `example.0`)
+   */
+  glob: string;
 
-    /**
-     * Whether to match files or folders with this pattern.
-     *
-     * Matches both if undefined.
-     */
-    matches?: FileOperationPatternKind;
+  /**
+   * Whether to match files or folders with this pattern.
+   *
+   * Matches both if undefined.
+   */
+  matches?: FileOperationPatternKind;
 
-    /**
-     * Additional options used during matching.
-     */
-    options?: FileOperationPatternOptions;
+  /**
+   * Additional options used during matching.
+   */
+  options?: FileOperationPatternOptions;
 }
 
 export type FileOperationPatternKind = 'file' | 'folder';
@@ -2548,61 +2683,61 @@ export type FileOperationPatternKind = 'file' | 'folder';
  */
 export interface FileOperationPatternOptions {
 
-    /**
-     * The pattern should be matched ignoring casing.
-     */
-    ignoreCase?: boolean;
+  /**
+   * The pattern should be matched ignoring casing.
+   */
+  ignoreCase?: boolean;
 }
 
 export interface ShutdownResult {
-    result: null;
-    error?: ResponseError
+  result: null;
+  error?: ResponseError
 }
 
 export interface DidOpenTextDocumentParams {
-    /**
-     * The document that was opened.
-     */
-    textDocument: TextDocumentItem;
+  /**
+   * The document that was opened.
+   */
+  textDocument: TextDocumentItem;
 }
 
 export interface TextDocumentItem {
-    /**
-     * The text document's URI.
-     */
-    uri: DocumentUri;
+  /**
+   * The text document's URI.
+   */
+  uri: DocumentUri;
 
-    /**
-     * The text document's language identifier.
-     */
-    languageId: string;
+  /**
+   * The text document's language identifier.
+   */
+  languageId: string;
 
-    /**
-     * The version number of this document (it will increase after each
-     * change, including undo/redo).
-     */
-    version: integer;
+  /**
+   * The version number of this document (it will increase after each
+   * change, including undo/redo).
+   */
+  version: integer;
 
-    /**
-     * The content of the opened text document.
-     */
-    text: string;
+  /**
+   * The content of the opened text document.
+   */
+  text: string;
 }
 
 export interface DocumentSymbolParams extends WorkDoneProgressParams,
-    PartialResultParams {
-    /**
-     * The text document.
-     */
-    textDocument: TextDocumentIdentifier;
+  PartialResultParams {
+  /**
+   * The text document.
+   */
+  textDocument: TextDocumentIdentifier;
 }
 
 export interface PartialResultParams {
-    /**
-     * An optional token that a server can use to report partial results (e.g.
-     * streaming) to the client.
-     */
-    partialResultToken?: ProgressToken;
+  /**
+   * An optional token that a server can use to report partial results (e.g.
+   * streaming) to the client.
+   */
+  partialResultToken?: ProgressToken;
 }
 
 
@@ -2614,55 +2749,55 @@ export interface PartialResultParams {
  */
 export interface DocumentSymbol {
 
-    /**
-     * The name of this symbol. Will be displayed in the user interface and
-     * therefore must not be an empty string or a string only consisting of
-     * white spaces.
-     */
-    name: string;
+  /**
+   * The name of this symbol. Will be displayed in the user interface and
+   * therefore must not be an empty string or a string only consisting of
+   * white spaces.
+   */
+  name: string;
 
-    /**
-     * More detail for this symbol, e.g the signature of a function.
-     */
-    detail?: string;
+  /**
+   * More detail for this symbol, e.g the signature of a function.
+   */
+  detail?: string;
 
-    /**
-     * The kind of this symbol.
-     */
-    kind: SymbolKind;
+  /**
+   * The kind of this symbol.
+   */
+  kind: SymbolKind;
 
-    /**
-     * Tags for this document symbol.
-     *
-     * @since 3.16.0
-     */
-    tags?: SymbolTag[];
+  /**
+   * Tags for this document symbol.
+   *
+   * @since 3.16.0
+   */
+  tags?: SymbolTag[];
 
-    /**
-     * Indicates if this symbol is deprecated.
-     *
-     * @deprecated Use tags instead
-     */
-    deprecated?: boolean;
+  /**
+   * Indicates if this symbol is deprecated.
+   *
+   * @deprecated Use tags instead
+   */
+  deprecated?: boolean;
 
-    /**
-     * The range enclosing this symbol not including leading/trailing whitespace
-     * but everything else like comments. This information is typically used to
-     * determine if the clients cursor is inside the symbol to reveal in the
-     * symbol in the UI.
-     */
-    range: Range;
+  /**
+   * The range enclosing this symbol not including leading/trailing whitespace
+   * but everything else like comments. This information is typically used to
+   * determine if the clients cursor is inside the symbol to reveal in the
+   * symbol in the UI.
+   */
+  range: Range;
 
-    /**
-     * The range that should be selected and revealed when this symbol is being
-     * picked, e.g. the name of a function. Must be contained by the `range`.
-     */
-    selectionRange: Range;
+  /**
+   * The range that should be selected and revealed when this symbol is being
+   * picked, e.g. the name of a function. Must be contained by the `range`.
+   */
+  selectionRange: Range;
 
-    /**
-     * Children of this symbol, e.g. properties of a class.
-     */
-    children?: DocumentSymbol[];
+  /**
+   * Children of this symbol, e.g. properties of a class.
+   */
+  children?: DocumentSymbol[];
 }
 
 /**
@@ -2670,138 +2805,164 @@ export interface DocumentSymbol {
  * interfaces etc.
  */
 export interface SymbolInformation {
-    /**
-     * The name of this symbol.
-     */
-    name: string;
+  /**
+   * The name of this symbol.
+   */
+  name: string;
 
-    /**
-     * The kind of this symbol.
-     */
-    kind: SymbolKind;
+  /**
+   * The kind of this symbol.
+   */
+  kind: SymbolKind;
 
-    /**
-     * Tags for this symbol.
-     *
-     * @since 3.16.0
-     */
-    tags?: SymbolTag[];
+  /**
+   * Tags for this symbol.
+   *
+   * @since 3.16.0
+   */
+  tags?: SymbolTag[];
 
-    /**
-     * Indicates if this symbol is deprecated.
-     *
-     * @deprecated Use tags instead
-     */
-    deprecated?: boolean;
+  /**
+   * Indicates if this symbol is deprecated.
+   *
+   * @deprecated Use tags instead
+   */
+  deprecated?: boolean;
 
-    /**
-     * The location of this symbol. The location's range is used by a tool
-     * to reveal the location in the editor. If the symbol is selected in the
-     * tool the range's start information is used to position the cursor. So
-     * the range usually spans more then the actual symbol's name and does
-     * normally include things like visibility modifiers.
-     *
-     * The range doesn't have to denote a node range in the sense of a abstract
-     * syntax tree. It can therefore not be used to re-construct a hierarchy of
-     * the symbols.
-     */
-    location: Location;
+  /**
+   * The location of this symbol. The location's range is used by a tool
+   * to reveal the location in the editor. If the symbol is selected in the
+   * tool the range's start information is used to position the cursor. So
+   * the range usually spans more then the actual symbol's name and does
+   * normally include things like visibility modifiers.
+   *
+   * The range doesn't have to denote a node range in the sense of a abstract
+   * syntax tree. It can therefore not be used to re-construct a hierarchy of
+   * the symbols.
+   */
+  location: Location;
 
-    /**
-     * The name of the symbol containing this symbol. This information is for
-     * user interface purposes (e.g. to render a qualifier in the user interface
-     * if necessary). It can't be used to re-infer a hierarchy for the document
-     * symbols.
-     */
-    containerName?: string;
+  /**
+   * The name of the symbol containing this symbol. This information is for
+   * user interface purposes (e.g. to render a qualifier in the user interface
+   * if necessary). It can't be used to re-infer a hierarchy for the document
+   * symbols.
+   */
+  containerName?: string;
 }
 
 export interface Location {
-    uri: DocumentUri;
-    range: Range;
+  uri: DocumentUri;
+  range: Range;
 }
 
 
 export interface ReferenceParams extends TextDocumentPositionParams,
-    WorkDoneProgressParams, PartialResultParams {
-    context: ReferenceContext;
+  WorkDoneProgressParams, PartialResultParams {
+  context: ReferenceContext;
 }
 
 interface TextDocumentPositionParams {
-    /**
-     * The text document.
-     */
-    textDocument: TextDocumentIdentifier;
+  /**
+   * The text document.
+   */
+  textDocument: TextDocumentIdentifier;
 
-    /**
-     * The position inside the text document.
-     */
-    position: Position;
+  /**
+   * The position inside the text document.
+   */
+  position: Position;
 }
 
 export interface ReferenceContext {
-    /**
-     * Include the declaration of the current symbol.
-     */
-    includeDeclaration: boolean;
+  /**
+   * Include the declaration of the current symbol.
+   */
+  includeDeclaration: boolean;
+}
+
+export interface DidChangeTextDocumentParams {
+  /**
+   * The document that did change. The version number points
+   * to the version after all provided content changes have
+   * been applied.
+   */
+  textDocument: VersionedTextDocumentIdentifier;
+
+  /**
+   * The actual content changes. The content changes describe single state
+   * changes to the document. So if there are two content changes c1 (at
+   * array index 0) and c2 (at array index 1) for a document in state S then
+   * c1 moves the document from S to S' and c2 from S' to S''. So c1 is
+   * computed on the state S and c2 is computed on the state S'.
+   *
+   * To mirror the content of a document using change events use the following
+   * approach:
+   * - start with the same initial content
+   * - apply the 'textDocument/didChange' notifications in the order you
+   *   receive them.
+   * - apply the `TextDocumentContentChangeEvent`s in a single notification
+   *   in the order you receive them.
+   */
+  contentChanges: TextDocumentContentChangeEvent[];
 }
 
 export interface DidCloseTextDocumentParams {
-    /**
-     * The document that was closed.
-     */
-    textDocument: TextDocumentIdentifier;
+  /**
+   * The document that was closed.
+   */
+  textDocument: TextDocumentIdentifier;
 }
 
 export interface DefinitionParams extends TextDocumentPositionParams,
-    WorkDoneProgressParams, PartialResultParams {
+  WorkDoneProgressParams, PartialResultParams {
 }
 
 export interface LocationLink {
 
-    /**
-     * Span of the origin of this link.
-     *
-     * Used as the underlined span for mouse interaction. Defaults to the word
-     * range at the mouse position.
-     */
-    originSelectionRange?: Range;
+  /**
+   * Span of the origin of this link.
+   *
+   * Used as the underlined span for mouse interaction. Defaults to the word
+   * range at the mouse position.
+   */
+  originSelectionRange?: Range;
 
-    /**
-     * The target resource identifier of this link.
-     */
-    targetUri: DocumentUri;
+  /**
+   * The target resource identifier of this link.
+   */
+  targetUri: DocumentUri;
 
-    /**
-     * The full target range of this link. If the target for example is a symbol
-     * then target range is the range enclosing this symbol not including
-     * leading/trailing whitespace but everything else like comments. This
-     * information is typically used to highlight the range in the editor.
-     */
-    targetRange: Range;
+  /**
+   * The full target range of this link. If the target for example is a symbol
+   * then target range is the range enclosing this symbol not including
+   * leading/trailing whitespace but everything else like comments. This
+   * information is typically used to highlight the range in the editor.
+   */
+  targetRange: Range;
 
-    /**
-     * The range that should be selected and revealed when this link is being
-     * followed, e.g the name of a function. Must be contained by the the
-     * `targetRange`. See also `DocumentSymbol#range`
-     */
-    targetSelectionRange: Range;
+  /**
+   * The range that should be selected and revealed when this link is being
+   * followed, e.g the name of a function. Must be contained by the the
+   * `targetRange`. See also `DocumentSymbol#range`
+   */
+  targetSelectionRange: Range;
 }
 
 export interface TypeDefinitionParams extends TextDocumentPositionParams,
-    WorkDoneProgressParams, PartialResultParams {
+  WorkDoneProgressParams, PartialResultParams {
 }
 
 export interface SignatureHelpParams extends TextDocumentPositionParams,
-    WorkDoneProgressParams {
-    /**
-     * The signature help context. This is only available if the client
-     * specifies to send this using the client capability
-     * `textDocument.signatureHelp.contextSupport === true`
-     *
-     * @since 3.15.0
-     */
-    context?: SignatureHelpContext;
+  WorkDoneProgressParams {
+  /**
+   * The signature help context. This is only available if the client
+   * specifies to send this using the client capability
+   * `textDocument.signatureHelp.contextSupport === true`
+   *
+   * @since 3.15.0
+   */
+  context?: SignatureHelpContext;
 }
 
 /**
@@ -2811,35 +2972,35 @@ export interface SignatureHelpParams extends TextDocumentPositionParams,
  * @since 3.15.0
  */
 export interface SignatureHelpContext {
-    /**
-     * Action that caused signature help to be triggered.
-     */
-    triggerKind: SignatureHelpTriggerKind;
+  /**
+   * Action that caused signature help to be triggered.
+   */
+  triggerKind: SignatureHelpTriggerKind;
 
-    /**
-     * Character that caused signature help to be triggered.
-     *
-     * This is undefined when triggerKind !==
-     * SignatureHelpTriggerKind.TriggerCharacter
-     */
-    triggerCharacter?: string;
+  /**
+   * Character that caused signature help to be triggered.
+   *
+   * This is undefined when triggerKind !==
+   * SignatureHelpTriggerKind.TriggerCharacter
+   */
+  triggerCharacter?: string;
 
-    /**
-     * `true` if signature help was already showing when it was triggered.
-     *
-     * Retriggers occur when the signature help is already active and can be
-     * caused by actions such as typing a trigger character, a cursor move, or
-     * document content changes.
-     */
-    isRetrigger: boolean;
+  /**
+   * `true` if signature help was already showing when it was triggered.
+   *
+   * Retriggers occur when the signature help is already active and can be
+   * caused by actions such as typing a trigger character, a cursor move, or
+   * document content changes.
+   */
+  isRetrigger: boolean;
 
-    /**
-     * The currently active `SignatureHelp`.
-     *
-     * The `activeSignatureHelp` has its `SignatureHelp.activeSignature` field
-     * updated based on the user navigating through available signatures.
-     */
-    activeSignatureHelp?: SignatureHelp;
+  /**
+   * The currently active `SignatureHelp`.
+   *
+   * The `activeSignatureHelp` has its `SignatureHelp.activeSignature` field
+   * updated based on the user navigating through available signatures.
+   */
+  activeSignatureHelp?: SignatureHelp;
 }
 
 /**
@@ -2848,19 +3009,19 @@ export interface SignatureHelpContext {
  * @since 3.15.0
  */
 export enum SignatureHelpTriggerKind {
-    /**
-     * Signature help was invoked manually by the user or by a command.
-     */
-    Invoked = 1,
-    /**
-     * Signature help was triggered by a trigger character.
-     */
-    TriggerCharacter = 2,
-    /**
-     * Signature help was triggered by the cursor moving or by the document
-     * content changing.
-     */
-    ContentChange = 3,
+  /**
+   * Signature help was invoked manually by the user or by a command.
+   */
+  Invoked = 1,
+  /**
+   * Signature help was triggered by a trigger character.
+   */
+  TriggerCharacter = 2,
+  /**
+   * Signature help was triggered by the cursor moving or by the document
+   * content changing.
+   */
+  ContentChange = 3,
 }
 
 /**
@@ -2869,35 +3030,35 @@ export enum SignatureHelpTriggerKind {
  * active and only one active parameter.
  */
 export interface SignatureHelp {
-    /**
-     * One or more signatures. If no signatures are available the signature help
-     * request should return `null`.
-     */
-    signatures: SignatureInformation[];
+  /**
+   * One or more signatures. If no signatures are available the signature help
+   * request should return `null`.
+   */
+  signatures: SignatureInformation[];
 
-    /**
-     * The active signature. If omitted or the value lies outside the
-     * range of `signatures` the value defaults to zero or is ignore if
-     * the `SignatureHelp` as no signatures.
-     *
-     * Whenever possible implementors should make an active decision about
-     * the active signature and shouldn't rely on a default value.
-     *
-     * In future version of the protocol this property might become
-     * mandatory to better express this.
-     */
-    activeSignature?: uinteger;
+  /**
+   * The active signature. If omitted or the value lies outside the
+   * range of `signatures` the value defaults to zero or is ignore if
+   * the `SignatureHelp` as no signatures.
+   *
+   * Whenever possible implementors should make an active decision about
+   * the active signature and shouldn't rely on a default value.
+   *
+   * In future version of the protocol this property might become
+   * mandatory to better express this.
+   */
+  activeSignature?: uinteger;
 
-    /**
-     * The active parameter of the active signature. If omitted or the value
-     * lies outside the range of `signatures[activeSignature].parameters`
-     * defaults to 0 if the active signature has parameters. If
-     * the active signature has no parameters it is ignored.
-     * In future version of the protocol this property might become
-     * mandatory to better express the active parameter if the
-     * active signature does have any.
-     */
-    activeParameter?: uinteger;
+  /**
+   * The active parameter of the active signature. If omitted or the value
+   * lies outside the range of `signatures[activeSignature].parameters`
+   * defaults to 0 if the active signature has parameters. If
+   * the active signature has no parameters it is ignored.
+   * In future version of the protocol this property might become
+   * mandatory to better express the active parameter if the
+   * active signature does have any.
+   */
+  activeParameter?: uinteger;
 }
 
 /**
@@ -2906,31 +3067,31 @@ export interface SignatureHelp {
  * a set of parameters.
  */
 export interface SignatureInformation {
-    /**
-     * The label of this signature. Will be shown in
-     * the UI.
-     */
-    label: string;
+  /**
+   * The label of this signature. Will be shown in
+   * the UI.
+   */
+  label: string;
 
-    /**
-     * The human-readable doc-comment of this signature. Will be shown
-     * in the UI but can be omitted.
-     */
-    documentation?: string | MarkupContent;
+  /**
+   * The human-readable doc-comment of this signature. Will be shown
+   * in the UI but can be omitted.
+   */
+  documentation?: string | MarkupContent;
 
-    /**
-     * The parameters of this signature.
-     */
-    parameters?: ParameterInformation[];
+  /**
+   * The parameters of this signature.
+   */
+  parameters?: ParameterInformation[];
 
-    /**
-     * The index of the active parameter.
-     *
-     * If provided, this is used in place of `SignatureHelp.activeParameter`.
-     *
-     * @since 3.16.0
-     */
-    activeParameter?: uinteger;
+  /**
+   * The index of the active parameter.
+   *
+   * If provided, this is used in place of `SignatureHelp.activeParameter`.
+   *
+   * @since 3.16.0
+   */
+  activeParameter?: uinteger;
 }
 
 /**
@@ -2960,15 +3121,15 @@ export interface SignatureInformation {
  * decide to remove HTML from the markdown to avoid script execution.
  */
 export interface MarkupContent {
-    /**
-     * The type of the Markup
-     */
-    kind: MarkupKind;
+  /**
+   * The type of the Markup
+   */
+  kind: MarkupKind;
 
-    /**
-     * The content itself
-     */
-    value: string;
+  /**
+   * The content itself
+   */
+  value: string;
 }
 
 /**
@@ -2977,25 +3138,25 @@ export interface MarkupContent {
  */
 export interface ParameterInformation {
 
-    /**
-     * The label of this parameter information.
-     *
-     * Either a string or an inclusive start and exclusive end offsets within
-     * its containing signature label. (see SignatureInformation.label). The
-     * offsets are based on a UTF-16 string representation as `Position` and
-     * `Range` does.
-     *
-     * *Note*: a label of type string should be a substring of its containing
-     * signature label. Its intended use case is to highlight the parameter
-     * label part in the `SignatureInformation.label`.
-     */
-    label: string | [uinteger, uinteger];
+  /**
+   * The label of this parameter information.
+   *
+   * Either a string or an inclusive start and exclusive end offsets within
+   * its containing signature label. (see SignatureInformation.label). The
+   * offsets are based on a UTF-16 string representation as `Position` and
+   * `Range` does.
+   *
+   * *Note*: a label of type string should be a substring of its containing
+   * signature label. Its intended use case is to highlight the parameter
+   * label part in the `SignatureInformation.label`.
+   */
+  label: string | [uinteger, uinteger];
 
-    /**
-     * The human-readable doc-comment of this parameter. Will be shown
-     * in the UI but can be omitted.
-     */
-    documentation?: string | MarkupContent;
+  /**
+   * The human-readable doc-comment of this parameter. Will be shown
+   * in the UI but can be omitted.
+   */
+  documentation?: string | MarkupContent;
 }
 
 export interface HoverParams extends TextDocumentPositionParams,
@@ -3078,4 +3239,583 @@ export interface DeclarationParams extends TextDocumentPositionParams,
   WorkDoneProgressParams, PartialResultParams {
 }
 
+/**
+ * How a completion was triggered
+ */
+export enum CompletionTriggerKind {
+  /**
+   * Completion was triggered by typing an identifier (24x7 code
+   * complete), manual invocation (e.g Ctrl+Space) or via API.
+   */
+  Invoked = 1,
 
+  /**
+   * Completion was triggered by a trigger character specified by
+   * the `triggerCharacters` properties of the
+   * `CompletionRegistrationOptions`.
+   */
+  TriggerCharacter = 2,
+
+  /**
+   * Completion was re-triggered as the current completion list is incomplete.
+   */
+  TriggerForIncompleteCompletions = 3
+}
+
+/**
+ * Contains additional information about the context in which a completion
+ * request is triggered.
+ */
+export interface CompletionContext {
+  /**
+   * How the completion was triggered.
+   */
+  triggerKind: CompletionTriggerKind;
+
+  /**
+   * The trigger character (a single character) that has trigger code
+   * complete. Is undefined if
+   * `triggerKind !== CompletionTriggerKind.TriggerCharacter`
+   */
+  triggerCharacter?: string;
+}
+
+export interface CompletionParams extends TextDocumentPositionParams,
+  WorkDoneProgressParams, PartialResultParams {
+  /**
+   * The completion context. This is only available if the client specifies
+   * to send this using the client capability
+   * `completion.contextSupport === true`
+   */
+  context?: CompletionContext;
+}
+
+/**
+ * Defines whether the insert text in a completion item should be interpreted as
+ * plain text or a snippet.
+ */
+export enum InsertTextFormat {
+  /**
+   * The primary text to be inserted is treated as a plain string.
+   */
+  PlainText = 1,
+
+  /**
+   * The primary text to be inserted is treated as a snippet.
+   *
+   * A snippet can define tab stops and placeholders with `$1`, `$2`
+   * and `${3:foo}`. `$0` defines the final tab stop, it defaults to
+   * the end of the snippet. Placeholders with equal identifiers are linked,
+   * that is typing in one will update others too.
+   */
+  Snippet = 2
+}
+
+/**
+ * A special text edit to provide an insert and a replace operation.
+ *
+ * @since 3.16.0
+ */
+export interface InsertReplaceEdit {
+  /**
+   * The string to be inserted.
+   */
+  newText: string;
+
+  /**
+   * The range if the insert is requested
+   */
+  insert: Range;
+
+  /**
+   * The range if the replace is requested.
+   */
+  replace: Range;
+}
+
+/**
+ * Additional details for a completion item label.
+ *
+ * @since 3.17.0
+ */
+export interface CompletionItemLabelDetails {
+
+  /**
+   * An optional string which is rendered less prominently directly after
+   * {@link CompletionItem.label label}, without any spacing. Should be
+   * used for function signatures or type annotations.
+   */
+  detail?: string;
+
+  /**
+   * An optional string which is rendered less prominently after
+   * {@link CompletionItemLabelDetails.detail}. Should be used for fully qualified
+   * names or file path.
+   */
+  description?: string;
+}
+
+export interface CompletionItem {
+
+  /**
+   * The label of this completion item.
+   *
+   * The label property is also by default the text that
+   * is inserted when selecting this completion.
+   *
+   * If label details are provided the label itself should
+   * be an unqualified name of the completion item.
+   */
+  label: string;
+
+  /**
+   * Additional details for the label
+   *
+   * @since 3.17.0
+   */
+  labelDetails?: CompletionItemLabelDetails;
+
+
+  /**
+   * The kind of this completion item. Based of the kind
+   * an icon is chosen by the editor. The standardized set
+   * of available values is defined in `CompletionItemKind`.
+   */
+  kind?: CompletionItemKind;
+
+  /**
+   * Tags for this completion item.
+   *
+   * @since 3.15.0
+   */
+  tags?: CompletionItemTag[];
+
+  /**
+   * A human-readable string with additional information
+   * about this item, like type or symbol information.
+   */
+  detail?: string;
+
+  /**
+   * A human-readable string that represents a doc-comment.
+   */
+  documentation?: string | MarkupContent;
+
+  /**
+   * Indicates if this item is deprecated.
+   *
+   * @deprecated Use `tags` instead if supported.
+   */
+  deprecated?: boolean;
+
+  /**
+   * Select this item when showing.
+   *
+   * *Note* that only one completion item can be selected and that the
+   * tool / client decides which item that is. The rule is that the *first*
+   * item of those that match best is selected.
+   */
+  preselect?: boolean;
+
+  /**
+   * A string that should be used when comparing this item
+   * with other items. When omitted the label is used
+   * as the sort text for this item.
+   */
+  sortText?: string;
+
+  /**
+   * A string that should be used when filtering a set of
+   * completion items. When omitted the label is used as the
+   * filter text for this item.
+   */
+  filterText?: string;
+
+  /**
+   * A string that should be inserted into a document when selecting
+   * this completion. When omitted the label is used as the insert text
+   * for this item.
+   *
+   * The `insertText` is subject to interpretation by the client side.
+   * Some tools might not take the string literally. For example
+   * VS Code when code complete is requested in this example
+   * `con<cursor position>` and a completion item with an `insertText` of
+   * `console` is provided it will only insert `sole`. Therefore it is
+   * recommended to use `textEdit` instead since it avoids additional client
+   * side interpretation.
+   */
+  insertText?: string;
+
+  /**
+   * The format of the insert text. The format applies to both the
+   * `insertText` property and the `newText` property of a provided
+   * `textEdit`. If omitted defaults to `InsertTextFormat.PlainText`.
+   *
+   * Please note that the insertTextFormat doesn't apply to
+   * `additionalTextEdits`.
+   */
+  insertTextFormat?: InsertTextFormat;
+
+  /**
+   * How whitespace and indentation is handled during completion
+   * item insertion. If not provided the client's default value depends on
+   * the `textDocument.completion.insertTextMode` client capability.
+   *
+   * @since 3.16.0
+   * @since 3.17.0 - support for `textDocument.completion.insertTextMode`
+   */
+  insertTextMode?: InsertTextMode;
+
+  /**
+   * An edit which is applied to a document when selecting this completion.
+   * When an edit is provided the value of `insertText` is ignored.
+   *
+   * *Note:* The range of the edit must be a single line range and it must
+   * contain the position at which completion has been requested.
+   *
+   * Most editors support two different operations when accepting a completion
+   * item. One is to insert a completion text and the other is to replace an
+   * existing text with a completion text. Since this can usually not be
+   * predetermined by a server it can report both ranges. Clients need to
+   * signal support for `InsertReplaceEdit`s via the
+   * `textDocument.completion.completionItem.insertReplaceSupport` client
+   * capability property.
+   *
+   * *Note 1:* The text edit's range as well as both ranges from an insert
+   * replace edit must be a [single line] and they must contain the position
+   * at which completion has been requested.
+   * *Note 2:* If an `InsertReplaceEdit` is returned the edit's insert range
+   * must be a prefix of the edit's replace range, that means it must be
+   * contained and starting at the same position.
+   *
+   * @since 3.16.0 additional type `InsertReplaceEdit`
+   */
+  textEdit?: TextEdit | InsertReplaceEdit;
+
+  /**
+   * The edit text used if the completion item is part of a CompletionList and
+   * CompletionList defines an item default for the text edit range.
+   *
+   * Clients will only honor this property if they opt into completion list
+   * item defaults using the capability `completionList.itemDefaults`.
+   *
+   * If not provided and a list's default range is provided the label
+   * property is used as a text.
+   *
+   * @since 3.17.0
+   */
+  textEditText?: string;
+
+  /**
+   * An optional array of additional text edits that are applied when
+   * selecting this completion. Edits must not overlap (including the same
+   * insert position) with the main edit nor with themselves.
+   *
+   * Additional text edits should be used to change text unrelated to the
+   * current cursor position (for example adding an import statement at the
+   * top of the file if the completion item will insert an unqualified type).
+   */
+  additionalTextEdits?: TextEdit[];
+
+  /**
+   * An optional set of characters that when pressed while this completion is
+   * active will accept it first and then type that character. *Note* that all
+   * commit characters should have `length=1` and that superfluous characters
+   * will be ignored.
+   */
+  commitCharacters?: string[];
+
+  /**
+   * An optional command that is executed *after* inserting this completion.
+   * *Note* that additional modifications to the current document should be
+   * described with the additionalTextEdits-property.
+   */
+  command?: Command;
+
+  /**
+   * A data entry field that is preserved on a completion item between
+   * a completion and a completion resolve request.
+   */
+  data?: LSPAny;
+}
+
+/**
+ * Represents a collection of [completion items](#CompletionItem) to be
+ * presented in the editor.
+ */
+export interface CompletionList {
+  /**
+   * This list is not complete. Further typing should result in recomputing
+   * this list.
+   *
+   * Recomputed lists have all their items replaced (not appended) in the
+   * incomplete completion sessions.
+   */
+  isIncomplete: boolean;
+
+  /**
+   * In many cases the items of an actual completion result share the same
+   * value for properties like `commitCharacters` or the range of a text
+   * edit. A completion list can therefore define item defaults which will
+   * be used if a completion item itself doesn't specify the value.
+   *
+   * If a completion list specifies a default value and a completion item
+   * also specifies a corresponding value the one from the item is used.
+   *
+   * Servers are only allowed to return default values if the client
+   * signals support for this via the `completionList.itemDefaults`
+   * capability.
+   *
+   * @since 3.17.0
+   */
+  itemDefaults?: {
+    /**
+     * A default commit character set.
+     *
+     * @since 3.17.0
+     */
+    commitCharacters?: string[];
+
+    /**
+     * A default edit range
+     *
+     * @since 3.17.0
+     */
+    editRange?: Range | {
+      insert: Range;
+      replace: Range;
+    };
+
+    /**
+     * A default insert text format
+     *
+     * @since 3.17.0
+     */
+    insertTextFormat?: InsertTextFormat;
+
+    /**
+     * A default insert text mode
+     *
+     * @since 3.17.0
+     */
+    insertTextMode?: InsertTextMode;
+
+    /**
+     * A default data value.
+     *
+     * @since 3.17.0
+     */
+    data?: LSPAny;
+  }
+
+  /**
+   * The completion items.
+   */
+  items: CompletionItem[];
+}
+
+/**
+ * A parameter literal used in inlay hint requests.
+ *
+ * @since 3.17.0
+ */
+export interface InlayHintParams extends WorkDoneProgressParams {
+  /**
+   * The text document.
+   */
+  textDocument: TextDocumentIdentifier;
+
+  /**
+   * The visible document range for which inlay hints should be computed.
+   */
+  range: Range;
+}
+
+/**
+ * Inlay hint kinds.
+ *
+ * @since 3.17.0
+ */
+export enum InlayHintKind {
+
+  /**
+   * An inlay hint that for a type annotation.
+   */
+  Type = 1,
+
+  /**
+   * An inlay hint that is for a parameter.
+   */
+  Parameter = 2
+}
+
+/**
+ * An inlay hint label part allows for interactive and composite labels
+ * of inlay hints.
+ *
+ * @since 3.17.0
+ */
+export interface InlayHintLabelPart {
+
+  /**
+   * The value of this label part.
+   */
+  value: string;
+
+  /**
+   * The tooltip text when you hover over this label part. Depending on
+   * the client capability `inlayHint.resolveSupport` clients might resolve
+   * this property late using the resolve request.
+   */
+  tooltip?: string | MarkupContent;
+
+  /**
+   * An optional source code location that represents this
+   * label part.
+   *
+   * The editor will use this location for the hover and for code navigation
+   * features: This part will become a clickable link that resolves to the
+   * definition of the symbol at the given location (not necessarily the
+   * location itself), it shows the hover that shows at the given location,
+   * and it shows a context menu with further code navigation commands.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  location?: Location;
+
+  /**
+   * An optional command for this label part.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  command?: Command;
+}
+
+/**
+ * Inlay hint information.
+ *
+ * @since 3.17.0
+ */
+export interface InlayHint {
+
+  /**
+   * The position of this hint.
+   *
+   * If multiple hints have the same position, they will be shown in the order
+   * they appear in the response.
+   */
+  position: Position;
+
+  /**
+   * The label of this hint. A human readable string or an array of
+   * InlayHintLabelPart label parts.
+   *
+   * *Note* that neither the string nor the label part can be empty.
+   */
+  label: string | InlayHintLabelPart[];
+
+  /**
+   * The kind of this hint. Can be omitted in which case the client
+   * should fall back to a reasonable default.
+   */
+  kind?: InlayHintKind;
+
+  /**
+   * Optional text edits that are performed when accepting this inlay hint.
+   *
+   * *Note* that edits are expected to change the document so that the inlay
+   * hint (or its nearest variant) is now part of the document and the inlay
+   * hint itself is now obsolete.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  textEdits?: TextEdit[];
+
+  /**
+   * The tooltip text when you hover over this item.
+   *
+   * Depending on the client capability `inlayHint.resolveSupport` clients
+   * might resolve this property late using the resolve request.
+   */
+  tooltip?: string | MarkupContent;
+
+  /**
+   * Render padding before the hint.
+   *
+   * Note: Padding should use the editor's background color, not the
+   * background color of the hint itself. That means padding can be used
+   * to visually align/separate an inlay hint.
+   */
+  paddingLeft?: boolean;
+
+  /**
+   * Render padding after the hint.
+   *
+   * Note: Padding should use the editor's background color, not the
+   * background color of the hint itself. That means padding can be used
+   * to visually align/separate an inlay hint.
+   */
+  paddingRight?: boolean;
+
+
+  /**
+   * A data entry field that is preserved on an inlay hint between
+   * a `textDocument/inlayHint` and a `inlayHint/resolve` request.
+   */
+  data?: LSPAny;
+}
+
+export interface TypeHierarchyPrepareParams extends TextDocumentPositionParams,
+  WorkDoneProgressParams {
+}
+
+export interface TypeHierarchyItem {
+  /**
+   * The name of this item.
+   */
+  name: string;
+
+  /**
+   * The kind of this item.
+   */
+  kind: SymbolKind;
+
+  /**
+   * Tags for this item.
+   */
+  tags?: SymbolTag[];
+
+  /**
+   * More detail for this item, e.g. the signature of a function.
+   */
+  detail?: string;
+
+  /**
+   * The resource identifier of this item.
+   */
+  uri: DocumentUri;
+
+  /**
+   * The range enclosing this symbol not including leading/trailing whitespace
+   * but everything else, e.g. comments and code.
+   */
+  range: Range;
+
+  /**
+   * The range that should be selected and revealed when this symbol is being
+   * picked, e.g. the name of a function. Must be contained by the
+   * [`range`](#TypeHierarchyItem.range).
+   */
+  selectionRange: Range;
+
+  /**
+   * A data entry field that is preserved between a type hierarchy prepare and
+   * supertypes or subtypes requests. It could also be used to identify the
+   * type hierarchy in the server, helping improve the performance on
+   * resolving supertypes and subtypes.
+   */
+  data?: LSPAny;
+}
