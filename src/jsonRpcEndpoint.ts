@@ -31,7 +31,10 @@ export class JSONRPCEndpoint extends EventEmitter {
             const jsonrpc = JSON.parse(jsonRPCResponseOrRequest);
             Logger.log(`[transform] ${jsonRPCResponseOrRequest}`, LoggerLevel.DEBUG);
 
-            if (Object.prototype.hasOwnProperty.call(jsonrpc, 'id')) {
+            // Check if it's a response (has id and result/error properties)
+            if (Object.prototype.hasOwnProperty.call(jsonrpc, 'id') && 
+                (Object.prototype.hasOwnProperty.call(jsonrpc, 'result') || Object.prototype.hasOwnProperty.call(jsonrpc, 'error'))) {
+                
                 const jsonRPCResponse: JSONRPCResponse = jsonrpc as JSONRPCResponse;
                 if (jsonRPCResponse.id === (this.nextId - 1)) {
                     this.client.receive(jsonRPCResponse);
@@ -39,9 +42,15 @@ export class JSONRPCEndpoint extends EventEmitter {
                     Logger.log(`[transform] ${jsonRPCResponseOrRequest}`, LoggerLevel.ERROR);
                     this.emit('error', `[transform] Received id mismatch! Got ${jsonRPCResponse.id}, expected ${this.nextId - 1}`);
                 }
-            } else {
+            } 
+            // It's a request or notification (has method property)
+            else if (Object.prototype.hasOwnProperty.call(jsonrpc, 'method')) {
                 const jsonRPCRequest: JSONRPCRequest = jsonrpc as JSONRPCRequest;
                 this.emit(jsonRPCRequest.method, jsonRPCRequest.params);
+            }
+            else {
+                Logger.log(`[transform] Received invalid JSON-RPC message: ${jsonRPCResponseOrRequest}`, LoggerLevel.ERROR);
+                this.emit('error', `[transform] Received invalid JSON-RPC message: ${jsonRPCResponseOrRequest}`);
             }
         });
     }

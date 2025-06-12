@@ -504,4 +504,58 @@ describe('LspClient', () => {
 
         expect(telEventRes).toEqual(telemetryEventRequest.params);
     });
+    
+    it('handles server request while waiting for a response', async () => {
+        const mockWriteStream: WriteMemory = new WriteMemory();
+        const mockReadStream = new Readable({
+            read() {
+                return
+            }
+        });
+        const e: JSONRPCEndpoint = new JSONRPCEndpoint(mockWriteStream, mockReadStream);
+        const client = new LspClient(e);
+        
+        // Create a promise that will be resolved when the server request is received
+        let serverRequestParams: { items: { section: string }[] };
+        const serverRequestReceived = new Promise<void>(resolve => {
+            e.on('workspace/configuration', (params) => {
+                serverRequestParams = params;
+                resolve();
+            });
+        });
+        
+        // Set up the client to send a request
+        const clientRequestPromise = client.shutdown();
+        
+        // Before sending the response to the client request, simulate the server sending a request with an ID
+        // This is the key part of the test - a server request with an ID that could be mistaken for a response
+        const serverRequest = { 
+            "jsonrpc": "2.0", 
+            "id": 100, // Server's request ID
+            "method": "workspace/configuration", 
+            "params": { 
+                "items": [{ "section": "typescript" }] 
+            } 
+        };
+        
+        // Push the server request to the stream
+        mockReadStream.push(`Content-Length: ${JSON.stringify(serverRequest).length}\r\n\r\n${JSON.stringify(serverRequest)}`);
+
+        // Wait for the server request to be processed
+        await serverRequestReceived;
+        
+        // Verify the server request was correctly identified as a request (not a response)
+        expect(serverRequestParams).toEqual(serverRequest.params);
+
+        // Now send the response to the client's original request
+        const shutdownResponse: JSONRPCResponse = {
+            "jsonrpc": "2.0", "id": 0, "result": {}
+        };
+        mockReadStream.push(`Content-Length: ${JSON.stringify(shutdownResponse).length}\r\n\r\n${JSON.stringify(shutdownResponse)}`);
+        mockReadStream.push(null);
+        
+        // The client request should still resolve correctly
+        const response = await clientRequestPromise;
+        expect(response).toEqual({});
+    });
 });
