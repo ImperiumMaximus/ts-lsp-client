@@ -44,7 +44,7 @@
   "repository": "ImperiumMaximus/ts-lsp-client",
   "bugs": "https://github.com/ImperiumMaximus/ts-lsp-client/issues",
   "dependencies": {
-    "json-rpc-2.0": "^1.7.0",
+    "json-rpc-2.0": "^1.7.1",
     "pino": "^7.0.5",
     "pino-pretty": "^5.1.3",
     "tslib": "~2.6.2"
