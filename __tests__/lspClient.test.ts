@@ -1,31 +1,10 @@
 import { JSONRPCRequest, JSONRPCResponse } from "json-rpc-2.0";
-import { Readable, Writable } from "stream";
+import { Readable } from "stream";
 import { JSONRPCEndpoint } from "../src/jsonRpcEndpoint";
 import { LspClient } from "../src/lspClient";
 import { ClientCapabilities, DidCloseTextDocumentParams, DidOpenTextDocumentParams, DocumentSymbol, SymbolKind, Location, SignatureHelp } from "../src/models";
 import {describe, expect, it} from "vitest";
-
-class WriteMemory extends Writable {
-    private _buffer: string;
-
-    public constructor() {
-        super();
-        this._buffer = '';
-    }
-
-    public _write(chunk, _, next) {
-        this._buffer += chunk;
-        next();
-    }
-
-    public reset() {
-        this._buffer = '';
-    }
-
-    public buffer() {
-        return this._buffer;
-    }
-}
+import { WriteMemory } from "./testUtils";
 
 describe('LspClient', () => {
 
@@ -517,9 +496,11 @@ describe('LspClient', () => {
         
         // Create a promise that will be resolved when the server request is received
         let serverRequestParams: { items: { section: string }[] };
+        let serverRequestId: number;
         const serverRequestReceived = new Promise<void>(resolve => {
-            e.on('workspace/configuration', (params) => {
+            e.on('workspace/configuration', (params, id) => {
                 serverRequestParams = params;
+                serverRequestId = id;
                 resolve();
             });
         });
@@ -546,6 +527,22 @@ describe('LspClient', () => {
         
         // Verify the server request was correctly identified as a request (not a response)
         expect(serverRequestParams).toEqual(serverRequest.params);
+        expect(serverRequestId).toEqual(serverRequest.id);
+
+        // Respond to the server request
+        const configResult = [{ settings: { typescript: { format: { enable: true } } } }];
+        client.respondToServerRequest(serverRequestId, configResult);
+        
+        // Verify the response was sent correctly
+        const expectedServerResponse = {
+            jsonrpc: "2.0",
+            id: 100,
+            result: configResult
+        };
+        expect(mockWriteStream.buffer()).toContain(JSON.stringify(expectedServerResponse));
+        
+        // Reset the write buffer to isolate the next response
+        mockWriteStream.reset();
 
         // Now send the response to the client's original request
         const shutdownResponse: JSONRPCResponse = {
@@ -557,5 +554,52 @@ describe('LspClient', () => {
         // The client request should still resolve correctly
         const response = await clientRequestPromise;
         expect(response).toEqual({});
+    });
+    
+    it('responds to server requests using onRequest', async () => {
+        const mockWriteStream: WriteMemory = new WriteMemory();
+        const mockReadStream = new Readable({
+            read() {
+                return
+            }
+        });
+        const e: JSONRPCEndpoint = new JSONRPCEndpoint(mockWriteStream, mockReadStream);
+        const client = new LspClient(e);
+        
+        // Set up a listener for workspace/configuration requests
+        const requestHandled = new Promise<void>(resolve => {
+            client.onRequest('workspace/configuration', (params, requestId) => {
+                if (requestId !== undefined) {
+                    // Respond with configuration settings
+                    const configResult = [{ settings: { typescript: { format: { enable: true } } } }];
+                    client.respondToServerRequest(requestId, configResult);
+                    resolve();
+                }
+            });
+        });
+        
+        // Simulate the server sending a request
+        const serverRequest = { 
+            "jsonrpc": "2.0", 
+            "id": 200, 
+            "method": "workspace/configuration", 
+            "params": { 
+                "items": [{ "section": "typescript" }] 
+            } 
+        };
+        
+        // Push the server request to the stream
+        mockReadStream.push(`Content-Length: ${JSON.stringify(serverRequest).length}\r\n\r\n${JSON.stringify(serverRequest)}`);
+
+        // Wait for the request to be handled
+        await requestHandled;
+        
+        // Verify the response was sent correctly
+        const expectedServerResponse = {
+            jsonrpc: "2.0",
+            id: 200,
+            result: [{ settings: { typescript: { format: { enable: true } } } }]
+        };
+        expect(mockWriteStream.buffer()).toContain(JSON.stringify(expectedServerResponse));
     });
 });
