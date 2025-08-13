@@ -1,30 +1,9 @@
 import { once } from "events";
 import { JSONRPCRequest, JSONRPCResponse } from "json-rpc-2.0";
-import { Readable, Writable } from "stream";
+import { Readable } from "stream";
 import { JSONRPCEndpoint } from "../src/jsonRpcEndpoint";
 import {describe, expect, it} from "vitest";
-
-class WriteMemory extends Writable {
-    private _buffer: string;
-
-    public constructor() {
-        super();
-        this._buffer = '';
-    }
-
-    public _write(chunk, _, next) {
-        this._buffer += chunk;
-        next();
-    }
-
-    public reset() {
-        this._buffer = '';
-    }
-
-    public buffer() {
-        return this._buffer;
-    }
-}
+import { WriteMemory } from "./testUtils";
 
 const mockReadStreamOK = (jsonRPC: JSONRPCResponse | JSONRPCRequest | JSONRPCResponse[] | JSONRPCRequest[] | (JSONRPCRequest | JSONRPCResponse)[] | string | string[], eof?: boolean) => {
     const readable = new Readable();

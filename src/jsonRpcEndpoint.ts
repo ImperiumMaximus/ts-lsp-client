@@ -31,7 +31,10 @@ export class JSONRPCEndpoint extends EventEmitter {
             const jsonrpc = JSON.parse(jsonRPCResponseOrRequest);
             Logger.log(`[transform] ${jsonRPCResponseOrRequest}`, LoggerLevel.DEBUG);
 
-            if (Object.prototype.hasOwnProperty.call(jsonrpc, 'id')) {
+            // Check if it's a response (has id and result/error properties)
+            if (Object.prototype.hasOwnProperty.call(jsonrpc, 'id') && 
+                (Object.prototype.hasOwnProperty.call(jsonrpc, 'result') || Object.prototype.hasOwnProperty.call(jsonrpc, 'error'))) {
+                
                 const jsonRPCResponse: JSONRPCResponse = jsonrpc as JSONRPCResponse;
                 if (jsonRPCResponse.id === (this.nextId - 1)) {
                     this.client.receive(jsonRPCResponse);
@@ -39,9 +42,20 @@ export class JSONRPCEndpoint extends EventEmitter {
                     Logger.log(`[transform] ${jsonRPCResponseOrRequest}`, LoggerLevel.ERROR);
                     this.emit('error', `[transform] Received id mismatch! Got ${jsonRPCResponse.id}, expected ${this.nextId - 1}`);
                 }
-            } else {
+            } 
+            // It's a request or notification (has method property)
+            else if (Object.prototype.hasOwnProperty.call(jsonrpc, 'method')) {
                 const jsonRPCRequest: JSONRPCRequest = jsonrpc as JSONRPCRequest;
-                this.emit(jsonRPCRequest.method, jsonRPCRequest.params);
+                // Pass the request ID if it exists (for server requests)
+                if (Object.prototype.hasOwnProperty.call(jsonrpc, 'id')) {
+                    this.emit(jsonRPCRequest.method, jsonRPCRequest.params, jsonRPCRequest.id);
+                } else {
+                    this.emit(jsonRPCRequest.method, jsonRPCRequest.params);
+                }
+            }
+            else {
+                Logger.log(`[transform] Received invalid JSON-RPC message: ${jsonRPCResponseOrRequest}`, LoggerLevel.ERROR);
+                this.emit('error', `[transform] Received invalid JSON-RPC message: ${jsonRPCResponseOrRequest}`);
             }
         });
     }
@@ -52,5 +66,22 @@ export class JSONRPCEndpoint extends EventEmitter {
 
     public notify(method: string, message?: JSONRPCParams): void {
         this.client.notify(method, message);
+    }
+
+    /**
+     * Respond to a server request with the given ID
+     * @param id The ID of the server request to respond to
+     * @param result The result to send back to the server
+     */
+    public respondToRequest(id: number, result: any): void {
+        const response = {
+            jsonrpc: "2.0",
+            id: id,
+            result: result
+        };
+        const responseStr = JSON.stringify(response);
+        Logger.log(`responding to request ${id}: ${responseStr}`, LoggerLevel.DEBUG);
+        const contentLength = Buffer.from(responseStr, 'utf-8').byteLength;
+        this.writable.write(`Content-Length: ${contentLength}\r\n\r\n${responseStr}`);
     }
 }
