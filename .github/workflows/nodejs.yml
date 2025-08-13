@@ -13,11 +13,12 @@ jobs:
     env:
       CI: true
       OS: ${{ matrix.os }}
-      NODE: '22.18'
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: volta-cli/action@v1
+    - uses: actions/checkout@v4
+    - uses: volta-cli/action@v4
+      with:
+        node-version: 22.18
     - name: Setup
       run: npm ci --no-audit
     - name: Lint
