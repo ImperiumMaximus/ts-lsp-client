@@ -90,7 +90,7 @@ export class LspClient {
      * @param requestId The ID of the server request to respond to
      * @param result The result to send back to the server
      */
-    public respondToServerRequest(requestId: number, result: any): void {
+    public respondToServerRequest(requestId: number, result: unknown): void {
         this.endpoint.respondToRequest(requestId, result);
     }
 
@@ -99,7 +99,7 @@ export class LspClient {
      * @param method The method name to listen for
      * @param listener The callback function that receives params and requestId
      */
-    public onRequest(method: string, listener: (params: any, requestId?: number) => void): void {
+    public onRequest(method: string, listener: (params: unknown, requestId?: number) => void): void {
         this.endpoint.on(method, listener);
     }
 }

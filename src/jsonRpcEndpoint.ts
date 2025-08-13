@@ -73,7 +73,7 @@ export class JSONRPCEndpoint extends EventEmitter {
      * @param id The ID of the server request to respond to
      * @param result The result to send back to the server
      */
-    public respondToRequest(id: number, result: any): void {
+    public respondToRequest(id: number, result: unknown): void {
         const response = {
             jsonrpc: "2.0",
             id: id,
