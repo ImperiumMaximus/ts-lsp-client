@@ -139,4 +139,26 @@ describe('JSONRPCTransform', () => {
             expect(j).toEqual(JSON.stringify(payload[payloadIdx++]));
         }
     });
+
+    it('buffers partial JSONs split over content-length header', async () => {
+        const response: JSONRPCResponse = {
+            "jsonrpc": "2.0", "id": 1, "result": {
+                "capabilities": { "textDocumentSync": 1, "hoverProvider": true, "completionProvider": { "resolveProvider": false, "triggerCharacters": ["."] }, "definitionProvider": true, "referencesProvider": true, "documentSymbolProvider": true, "codeActionProvider": { "codeActionKinds": ["quickfix", "refactor.extract"] }, "codeLensProvider": { "resolveProvider": false }, "renameProvider": true }
+            }
+        };
+        const request: JSONRPCRequest = { "jsonrpc": "2.0", "method": "telemetry/event", "params": { "properties": { "Feature": "ApexPrelude-startup", "Exception": "None" }, "measures": { "ExecutionTime": 3000 } } };
+
+        const jsonRpcResponseStr = JSON.stringify(response);
+        const jsonRpcRequestStr = JSON.stringify(request);
+
+        const payload = [response, request];
+        const payloadSplit = [`Content-Length: ${jsonRpcResponseStr.length}\r\n\r\n${jsonRpcResponseStr}`, `Content-Length: ${jsonRpcRequestStr.length}\r\n', '\r\n${jsonRpcRequestStr}`];
+
+        const jsonRpcTransform = JSONRPCTransform.createStream(mockReadStreamOK(payloadSplit));
+
+        let payloadIdx = 0;
+        for await (const j of jsonRpcTransform) {
+            expect(j).toEqual(JSON.stringify(payload[payloadIdx++]));
+        }
+    });
 });

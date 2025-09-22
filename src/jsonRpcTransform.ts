@@ -35,19 +35,19 @@ export class JSONRPCTransform extends Transform {
 
         this._curChunk = Buffer.concat([this._curChunk, chunk]);
 
-        const prefixMinLength = Buffer.byteLength('Content-Length: 0\r\n\r\n', encoding);
         const prefixLength = Buffer.byteLength('Content-Length: ', encoding);
         const prefixRegex = /^Content-Length: /i;
         const digitLength = Buffer.byteLength('0', encoding);
         const digitRe = /^[0-9]/;
         const suffixLength = Buffer.byteLength('\r\n\r\n', encoding);
+        const suffixExistsRe = /\r\n\r\n/;
         const suffixRe = /^\r\n\r\n/;
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
           if (this._state === 'content-length') {
             // Not enough data for a content length match
-            if (this._curChunk.length < prefixMinLength)
+            if (!suffixExistsRe.test(this._curChunk.toString(encoding)))
               break;
 
             const leading = this._curChunk.slice(0, prefixLength);
