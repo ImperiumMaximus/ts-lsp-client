@@ -1,6 +1,6 @@
 {
   "name": "ts-lsp-client",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Standalone Language Server Protocol Implementation with minimal dependencies",
   "main": "build/src/main.js",
   "types": "build/src/main.d.ts",
