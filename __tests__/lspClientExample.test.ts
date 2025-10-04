@@ -36,7 +36,7 @@ beforeAll(async () => {
     capabilities: {},
     clientInfo: {
       name: 'lspClientExample',
-      version: '0.0.9'
+      version: '1.1.0'
     },
     workspaceFolders: [
       {
