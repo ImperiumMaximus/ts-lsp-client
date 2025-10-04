@@ -31,8 +31,8 @@ npm run test
 Licensed under the MIT License. See the [LICENSE](https://github.com/ImperiumMaximus/ts-lsp-client/blob/main/LICENSE) file for details.
 
 [ts-badge]: https://img.shields.io/badge/TypeScript-4.3-blue.svg
-[nodejs-badge]: https://img.shields.io/badge/Node.js->=%2014.21-yellow.svg
-[nodejs]: https://nodejs.org/dist/latest-v14.x/docs/api/
+[nodejs-badge]: https://img.shields.io/badge/Node.js->=%2022.10-yellow.svg
+[nodejs]: https://nodejs.org/dist/latest-v22.x/docs/api/
 [gha-badge]: https://github.com/ImperiumMaximus/ts-lsp-client/actions/workflows/nodejs.yml/badge.svg
 [gha-ci]: https://github.com/ImperiumMaximus/ts-lsp-client/actions/workflows/nodejs.yml
 [typescript]: https://www.typescriptlang.org/

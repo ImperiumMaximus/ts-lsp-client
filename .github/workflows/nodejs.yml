@@ -13,13 +13,16 @@ jobs:
     env:
       CI: true
       OS: ${{ matrix.os }}
-      NODE: '14.21'
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: volta-cli/action@v1
+    - uses: actions/checkout@v4
+    - uses: volta-cli/action@v4
+      with:
+        node-version: 22.11
+    - name: Install pnpm
+      run: npm install -g pnpm
     - name: Setup
-      run: npm ci --no-audit
+      run: pnpm i
     - name: Lint
       run: npm run lint --if-present
     - name: Test

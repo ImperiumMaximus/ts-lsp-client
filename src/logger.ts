@@ -10,7 +10,7 @@ export enum LoggerLevel {
 }
 
 export class Logger {
-    public static setLogLevel(logLevel: string, isJsonFormatEnabled: boolean): void {
+    public static setLogLevel(logLevel: string, isJsonFormatEnabled: boolean, destination: number = 1, sync: boolean = false): void {
         logLevel = logLevel.toLowerCase();
         this.isJsonFormatEnabled = isJsonFormatEnabled;
 
@@ -18,12 +18,17 @@ export class Logger {
             this.logger = pino({
                 name: 'ts-lsp-client',
                 level: logLevel,
-                prettyPrint: {
-                    levelFirst: true, // --levelFirst
-                    colorize: true,
-                    translateTime: true,
-                    ignore: 'pid,hostname' // --ignore
-                }
+                transport: {
+                    target: "pino-pretty",
+                    options: {
+                        levelFirst: true,
+                        translateTime: true,
+                        colorize: true,
+                        ignore: 'pid,hostname',
+                        destination,
+                        sync
+                    },
+                },
             });
         } else {
             // do nothing for now, need to put pino to move to file

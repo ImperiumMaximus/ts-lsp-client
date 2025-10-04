@@ -1,21 +1,31 @@
+import path from 'path';
 import { Logger, LoggerLevel } from '../src/logger';
-import {afterEach, beforeEach, describe, expect, it, SpyInstance, vi} from "vitest";
-
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import os from 'os';
+import fs from 'fs';
 
 describe('ts-lsp-client logger', () => {
 
-    let stdoutWriteSpy: SpyInstance;
+    let filePath = '';
+    let fd = -1;
+
+    function createTempFile() {
+        const filePath = path.join(os.tmpdir(), `pino-test-${Date.now()}.log`)
+        const fd = fs.openSync(filePath, "w+")
+        return { fd, filePath }
+    }
 
     beforeEach(() => {
-        stdoutWriteSpy = vi.spyOn(process.stdout, 'write');
+        ({ fd, filePath } = createTempFile());
     });
 
     afterEach(() => {
-        stdoutWriteSpy.mockClear();
+        fs.closeSync(fd)
+        fs.unlinkSync(filePath) // cleanup
     });
 
     it('prints logs', async () => {
-        Logger.setLogLevel('trace', false);
+        Logger.setLogLevel('trace', false, fd, true);
         Logger.log('Test Trace Message', LoggerLevel.TRACE);
         Logger.log('Test Debug Message', LoggerLevel.DEBUG);
         Logger.log('Test Info Message', LoggerLevel.INFO);
@@ -23,7 +33,7 @@ describe('ts-lsp-client logger', () => {
         Logger.log('Test Error Message', LoggerLevel.ERROR);
         Logger.log('Test Fatal Message', LoggerLevel.FATAL);
 
-        const output = stdoutWriteSpy.mock.calls.reduce((acc, c) => { acc += c[0]; return acc }, '');
+        const output = fs.readFileSync(filePath, "utf8")
 
         expect(output).toContain('Test Trace Message');
         expect(output).toContain('Test Debug Message');
@@ -31,11 +41,10 @@ describe('ts-lsp-client logger', () => {
         expect(output).toContain('Test Warn Message');
         expect(output).toContain('Test Error Message');
         expect(output).toContain('Test Fatal Message');
-
-        })
+    })
 
     it('doesn\'t print logs below the level specified during initialization', async () => {
-        Logger.setLogLevel('warn', false);
+        Logger.setLogLevel('warn', false, fd, true);
         Logger.log('Test Trace Message', LoggerLevel.TRACE);
         Logger.log('Test Debug Message', LoggerLevel.DEBUG);
         Logger.log('Test Info Message', LoggerLevel.INFO);
@@ -43,7 +52,7 @@ describe('ts-lsp-client logger', () => {
         Logger.log('Test Error Message', LoggerLevel.ERROR);
         Logger.log('Test Fatal Message', LoggerLevel.FATAL);
 
-        const output = stdoutWriteSpy.mock.calls.reduce((acc, c) => { acc += c[0]; return acc }, '');
+        const output = fs.readFileSync(filePath, "utf8");
 
         expect(output).not.toContain('Test Trace Message');
         expect(output).not.toContain('Test Debug Message');
@@ -52,10 +61,10 @@ describe('ts-lsp-client logger', () => {
         expect(output).toContain('Test Error Message');
         expect(output).toContain('Test Fatal Message');
 
-        })
+    })
 
     it('doesn\'t print when json output is requested', async () => {
-        Logger.setLogLevel('warn', true);
+        Logger.setLogLevel('warn', true, fd, true);
         Logger.log('Test Trace Message', LoggerLevel.TRACE);
         Logger.log('Test Debug Message', LoggerLevel.DEBUG);
         Logger.log('Test Info Message', LoggerLevel.INFO);
@@ -63,7 +72,7 @@ describe('ts-lsp-client logger', () => {
         Logger.log('Test Error Message', LoggerLevel.ERROR);
         Logger.log('Test Fatal Message', LoggerLevel.FATAL);
 
-        const output = stdoutWriteSpy.mock.calls.reduce((acc, c) => { acc += c[0]; return acc }, '');
+        const output = fs.readFileSync(filePath, "utf8");
 
         expect(output).not.toContain('Test Trace Message');
         expect(output).not.toContain('Test Debug Message');
@@ -72,5 +81,5 @@ describe('ts-lsp-client logger', () => {
         expect(output).not.toContain('Test Error Message');
         expect(output).not.toContain('Test Fatal Message');
 
-        })
+    })
 })

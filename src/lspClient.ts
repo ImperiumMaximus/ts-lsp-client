@@ -1,4 +1,4 @@
-import { JSONRPCEndpoint } from "./jsonRpcEndpoint";
+import { JSONRPCEndpoint } from './jsonRpcEndpoint';
 import {
   DefinitionParams,
   DidCloseTextDocumentParams,
@@ -17,8 +17,9 @@ import {
   TypeDefinitionParams,
   Location,
   HoverParams,
-  Hover, DeclarationParams
-} from "./models";
+  Hover,
+  DeclarationParams,
+} from './models';
 import { once } from 'events';
 export class LspClient {
 
@@ -77,10 +78,28 @@ export class LspClient {
     }
 
     public hover(params: HoverParams): PromiseLike<Hover> {
-      return this.endpoint.send('textDocument/hover', params);
+        return this.endpoint.send('textDocument/hover', params);
     }
 
     public gotoDeclaration(params: DeclarationParams): PromiseLike<Location | Location[] | LocationLink[] |null> {
-      return this.endpoint.send('textDocument/declaration', params);
+        return this.endpoint.send('textDocument/declaration', params);
+    }
+
+    /**
+     * Respond to a server request with the given ID
+     * @param requestId The ID of the server request to respond to
+     * @param result The result to send back to the server
+     */
+    public respondToServerRequest(requestId: number, result: unknown): void {
+        this.endpoint.respondToRequest(requestId, result);
+    }
+
+    /**
+     * Add an event listener for a specific server request method
+     * @param method The method name to listen for
+     * @param listener The callback function that receives params and requestId
+     */
+    public onRequest(method: string, listener: (params: unknown, requestId?: number) => void): void {
+        this.endpoint.on(method, listener);
     }
 }
