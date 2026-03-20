@@ -30,9 +30,9 @@ jobs:
     - name: Build
       run: npm run build --if-present
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v3
       with:
-        files: ./coverage/cobertura-coverage.xml
+        files: ./coverage/lcov.info
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         env_vars: OS,NODE
