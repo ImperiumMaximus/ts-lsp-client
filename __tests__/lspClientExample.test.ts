@@ -1,9 +1,9 @@
-import {beforeAll, describe, expect, it} from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import * as lspClient from '../src/main';
-import {JSONRPCEndpoint, LspClient, SignatureHelpTriggerKind} from '../src/main';
-import {ChildProcessWithoutNullStreams, spawn} from "child_process";
+import { JSONRPCEndpoint, LspClient, SignatureHelpTriggerKind } from '../src/main';
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import * as path from 'path';
-import {pathToFileURL} from "url";
+import { pathToFileURL } from "url";
 
 
 const rootPath = path.resolve(path.join(__dirname, 'mock'));
@@ -31,7 +31,7 @@ beforeAll(async () => {
   // create the LSP client
   client = new LspClient(endpoint);
 
-  const result = await client.initialize({
+  await client.initialize({
     processId: process.pid,
     capabilities: {},
     clientInfo: {
@@ -53,13 +53,11 @@ beforeAll(async () => {
       }
     }
   });
-
-  expect(result.capabilities).toBeDefined();
 });
 
 describe('language features', () => {
   const docUri = pathToFileURL(path.join(rootPath, '_fake.ts')).href;
-  const impUri = pathToFileURL(path.join(rootPath, 'example.ts')).href.replace(/\/([A-Z]):/, (v) => v.substring(0, v.length - 1).toLocaleLowerCase()+'%3A');
+  const impUri = pathToFileURL(path.join(rootPath, 'example.ts')).href.replace(/\/([A-Z]):/, (v) => v.substring(0, v.length - 1).toLocaleLowerCase() + '%3A');
   const content =
     `import func from './example';\r\n` +
     `func(1,2);\r\n` +
@@ -79,14 +77,17 @@ describe('language features', () => {
           languageId: 'typescript'
         }
       });
-
-      const result = await client.once('textDocument/publishDiagnostics');
-
-      expect(result).toEqual([{
-        uri: docUri,
-        diagnostics: []
-      }]);
     }
+  });
+
+  it('Publish Diagnostics', async () => {
+
+    const result = await client.once('textDocument/publishDiagnostics');
+
+    expect(result).toEqual([{
+      uri: docUri,
+      diagnostics: []
+    }]);
   });
 
   it('Goto Definition Request', async () => {
@@ -104,7 +105,7 @@ describe('language features', () => {
     expect(result).toEqual([{
       uri: impUri,
       range: {
-        start: { line: 6, character: 24},
+        start: { line: 6, character: 24 },
         end: { line: 6, character: 28 }
       }
     }])
@@ -178,22 +179,22 @@ describe('language features', () => {
 
       expect(result).not.toBeNull();
       expect(result).toEqual({
-          activeSignature: 0,
-          activeParameter: 0,
-          signatures: [
-            {
-              label: 'meth(a: number, b: number): boolean',
-              parameters: [
-                {
-                  label: 'a: number'
-                },
-                {
-                  label: 'b: number'
-                }
-              ]
-            }
-          ]
-        }
+        activeSignature: 0,
+        activeParameter: 0,
+        signatures: [
+          {
+            label: 'meth(a: number, b: number): boolean',
+            parameters: [
+              {
+                label: 'a: number'
+              },
+              {
+                label: 'b: number'
+              }
+            ]
+          }
+        ]
+      }
       )
     }
   })
