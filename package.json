@@ -2,12 +2,26 @@
   "name": "ts-lsp-client",
   "version": "1.1.0",
   "description": "Standalone Language Server Protocol Implementation with minimal dependencies",
-  "main": "build/src/main.js",
-  "types": "build/src/main.d.ts",
   "files": [
-    "build/src"
+    "build/cjs/**/*",
+    "build/esm/**/*",
+    "!build/**/*.map"
   ],
-  "type": "module",
+  "main": "./build/cjs/main.js",
+  "module": "./build/esm/main.js",
+  "types": "./build/cjs/types/main.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./build/esm/types/main.d.ts",
+        "default": "./build/esm/main.js"
+      },
+      "require": {
+        "types": "./build/cjs/types/main.d.ts",
+        "default": "./build/cjs/main.js"
+      }
+    }
+  },
   "engines": {
     "node": ">= 22.12.0",
     "pnpm": ">= 6.0.0"
@@ -36,7 +50,9 @@
     "start": "node build/src/main.js",
     "clean": "rimraf coverage build tmp",
     "prebuild": "npm run lint",
-    "build": "tsc -p tsconfig.release.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && node scripts/postbuild.mjs",
     "build:watch": "tsc -w -p tsconfig.release.json",
     "lint": "eslint src/ __tests__/ --ext .ts,.tsx",
     "test": "vitest run --coverage",

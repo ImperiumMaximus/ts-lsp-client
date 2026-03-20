@@ -36,12 +36,7 @@ export default defineConfig([globalIgnores(["**/*.js"]), {
         },
 
         parser: tsParser,
-        ecmaVersion: 5,
-        sourceType: "module",
-
-        parserOptions: {
-            project: "tsconfig.json",
-        },
+        ecmaVersion: 5
     },
 
     rules: {
