@@ -32,7 +32,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
-        directory: ./coverage/
+        files: ./coverage/cobertura-coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         env_vars: OS,NODE
