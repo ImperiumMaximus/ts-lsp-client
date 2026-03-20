@@ -12,22 +12,25 @@
     "node": ">= 22.12.0",
     "pnpm": ">= 6.0.0"
   },
-  "packageManager": "pnpm@10.18.0",
+  "packageManager": "pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b",
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.1",
     "@types/node": "~24.6.2",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
-    "@typescript-eslint/parser": "^8.45.0",
-    "@vitest/coverage-v8": "^3.2.4",
-    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "@vitest/coverage-v8": "^4.0.12",
+    "@vitest/eslint-plugin": "^1.4.3",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-vitest": "^0.5.4",
+    "globals": "^16.5.0",
     "nyc": "^17.1.0",
     "prettier": "~3.6.2",
-    "rimraf": "~6.0.1",
+    "rimraf": "~6.1.2",
     "tsutils": "~3.21.0",
     "typescript": "~5.9.3",
     "typescript-language-server": "^3.3.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.12"
   },
   "scripts": {
     "start": "node build/src/main.js",
