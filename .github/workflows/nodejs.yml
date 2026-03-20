@@ -34,7 +34,6 @@ jobs:
       with:
         directory: ./coverage/
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./lcov.info
         flags: unittests
         env_vars: OS,NODE
         name: codecov-umbrella
