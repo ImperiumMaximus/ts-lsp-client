@@ -33,7 +33,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/lcov.info
+        files: ./coverage/coverage-final.json
         flags: unittests
         env_vars: OS,NODE
         name: codecov-umbrella
