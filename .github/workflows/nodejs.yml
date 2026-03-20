@@ -27,12 +27,14 @@ jobs:
       run: npm run lint --if-present
     - name: Test
       run: npm test
+    - name: Copy coverage report to root
+      run: node -e "require('fs').copyFileSync('coverage/cobertura-coverage.xml', 'cobertura-coverage.xml')"
     - name: Build
       run: npm run build --if-present
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
-        files: ./coverage/lcov.info
+        files: ./cobertura-coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         env_vars: OS,NODE
